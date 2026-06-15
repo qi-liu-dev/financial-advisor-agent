@@ -1,0 +1,51 @@
+[
+  {
+    "meeting_id": "mock-meeting-001",
+    "client_id": "mock-client-001",
+    "date": "2026-04-12",
+    "transcript": [
+      {
+        "turn_id": "t1",
+        "speaker": "Advisor",
+        "text": "You mentioned wanting more predictable retirement income. Is capital preservation still the priority?"
+      },
+      {
+        "turn_id": "t2",
+        "speaker": "Client",
+        "text": "Yes. I can accept some fluctuation, but I do not want a plan that creates large drawdowns right before retirement."
+      },
+      {
+        "turn_id": "t3",
+        "speaker": "Client",
+        "text": "We may also need money for renovations next year, maybe around 150,000 euros."
+      },
+      {
+        "turn_id": "t4",
+        "speaker": "Advisor",
+        "text": "I will review liquidity and concentration risk before our next meeting."
+      }
+    ]
+  },
+  {
+    "meeting_id": "mock-meeting-002",
+    "client_id": "mock-client-002",
+    "date": "2026-04-18",
+    "transcript": [
+      {
+        "turn_id": "t1",
+        "speaker": "Client",
+        "text": "My company valuation increased again, so I feel even more exposed to one asset."
+      },
+      {
+        "turn_id": "t2",
+        "speaker": "Advisor",
+        "text": "We should discuss diversification scenarios, tax implications, and liquidity timing with your tax specialist."
+      },
+      {
+        "turn_id": "t3",
+        "speaker": "Client",
+        "text": "I am comfortable with market risk, but I do not want surprises around reporting or cross-border tax."
+      }
+    ]
+  }
+]

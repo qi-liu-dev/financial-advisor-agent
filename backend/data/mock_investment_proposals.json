@@ -1,0 +1,26 @@
+[
+  {
+    "proposal_id": "mock-proposal-001",
+    "client_id": "mock-client-001",
+    "title": "Reduce single-stock concentration over six months",
+    "proposal_summary": "Advisor team is considering a staged reduction of a concentrated listed-equity holding and reallocating proceeds across diversified income-oriented funds, subject to suitability and tax review.",
+    "intended_outcome": "Lower concentration risk while preserving retirement-income planning flexibility.",
+    "known_open_questions": [
+      "Tax impact of selling the concentrated position",
+      "Exact liquidity needed for renovation timing",
+      "Client comfort with fund fees"
+    ]
+  },
+  {
+    "proposal_id": "mock-proposal-002",
+    "client_id": "mock-client-002",
+    "title": "Diversification scenarios for founder wealth",
+    "proposal_summary": "Advisor team is exploring scenarios that gradually diversify liquid assets while acknowledging the client's private-company exposure and possible relocation.",
+    "intended_outcome": "Build a more diversified long-term portfolio without creating unmanaged tax or reporting issues.",
+    "known_open_questions": [
+      "Tax residency timeline",
+      "Restrictions on selling private-company shares",
+      "Preferred reporting format"
+    ]
+  }
+]

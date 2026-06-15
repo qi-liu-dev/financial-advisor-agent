@@ -1,0 +1,36 @@
+[
+  {
+    "portfolio_id": "mock-portfolio-001",
+    "client_id": "mock-client-001",
+    "currency": "EUR",
+    "total_value": 1850000,
+    "asset_allocation": {
+      "cash": 0.11,
+      "investment_grade_bonds": 0.34,
+      "global_equities": 0.31,
+      "alternatives": 0.08,
+      "single_stock_position": 0.16
+    },
+    "risk_notes": [
+      "Single-stock position is above stated preference",
+      "Liquidity appears adequate but renovation timing should be confirmed"
+    ]
+  },
+  {
+    "portfolio_id": "mock-portfolio-002",
+    "client_id": "mock-client-002",
+    "currency": "EUR",
+    "total_value": 2650000,
+    "asset_allocation": {
+      "cash": 0.05,
+      "global_equities": 0.48,
+      "private_company_equity": 0.37,
+      "bonds": 0.06,
+      "alternatives": 0.04
+    },
+    "risk_notes": [
+      "High private-company concentration",
+      "Tax and reporting complexity should be reviewed before any restructuring"
+    ]
+  }
+]

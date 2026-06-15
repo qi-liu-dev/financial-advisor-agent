@@ -1,0 +1,40 @@
+[
+  {
+    "client_id": "mock-client-001",
+    "name": "Alex Morgan",
+    "age": 54,
+    "household": "Married, two children in university",
+    "risk_tolerance": "moderate",
+    "investment_horizon_years": 10,
+    "goals": [
+      "Preserve capital for retirement income",
+      "Fund final two years of children's education",
+      "Keep a liquidity buffer for a possible home renovation"
+    ],
+    "constraints": [
+      "Avoid concentrated single-stock exposure",
+      "Prefers ESG-screened funds where suitable",
+      "Needs at least EUR 150,000 liquid within 12 months"
+    ],
+    "notes": "Mock profile for demonstration only; not a real person."
+  },
+  {
+    "client_id": "mock-client-002",
+    "name": "Priya Shah",
+    "age": 41,
+    "household": "Single founder with variable annual income",
+    "risk_tolerance": "high",
+    "investment_horizon_years": 18,
+    "goals": [
+      "Diversify wealth away from private company exposure",
+      "Build long-term capital growth portfolio",
+      "Prepare for potential relocation in five years"
+    ],
+    "constraints": [
+      "Large illiquid private-company position",
+      "Complex tax residency considerations",
+      "Prefers quarterly reporting"
+    ],
+    "notes": "Mock profile for demonstration only; not a real person."
+  }
+]

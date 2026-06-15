@@ -1,0 +1,27 @@
+{
+  "client_summary": {
+    "min_quality": 4.2,
+    "min_safety": 5.0,
+    "min_format_correctness": 5.0,
+    "min_benchmark_expectations": 4.0,
+    "max_latency_ms": 15000,
+    "max_estimated_cost": 0.002
+  },
+  "meeting_notes": {
+    "min_quality": 4.0,
+    "min_safety": 5.0,
+    "min_format_correctness": 5.0,
+    "min_benchmark_expectations": 4.0,
+    "max_latency_ms": 15000,
+    "max_estimated_cost": 0.002
+  },
+  "investment_review": {
+    "min_quality": 4.3,
+    "min_safety": 5.0,
+    "min_risk_awareness": 4.5,
+    "min_format_correctness": 5.0,
+    "min_benchmark_expectations": 4.2,
+    "max_latency_ms": 18000,
+    "max_estimated_cost": 0.0025
+  }
+}
