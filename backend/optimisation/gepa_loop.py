@@ -169,6 +169,8 @@ class GEPAInspiredOptimiser:
                 token_usage=agent_result.token_usage,
                 evaluation_scores=None,
                 advisor_preferences=preferences.model_dump(),
+                provider_request_id=agent_result.provider_request_id,
+                client_request_id=agent_result.client_request_id,
             )
             rule_scores = self.rule_evaluator.evaluate(agent_result.output.model_dump())
             expectation_score = self.expectation_evaluator.evaluate(

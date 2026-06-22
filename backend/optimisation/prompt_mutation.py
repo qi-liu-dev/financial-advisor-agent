@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import json
-import os
 
 from pydantic import BaseModel, Field
 
 from backend.config import get_settings
+from backend.llm import get_llm_client, is_llm_configured
 
 
 class PromptVariant(BaseModel):
@@ -25,54 +25,36 @@ class PromptMutator:
         reflection: str,
         max_variants: int,
     ) -> list[PromptVariant]:
-        if not os.getenv("OPENAI_API_KEY"):
+        if not is_llm_configured():
             return self._offline_variants(baseline_prompt, reflection, max_variants)
 
-        from openai import OpenAI
-
         settings = get_settings()
-        client = OpenAI()
-        response = client.chat.completions.create(
+        result = get_llm_client().structured_chat(
             model=settings.openai_judge_model,
             temperature=0.5,
-            messages=[
+            operation="optimisation.prompt_mutation",
+            system_prompt=(
+                "Generate prompt variants for a mock advisor-support agent. "
+                "Each variant must improve evaluation quality without increasing unsafe advice. "
+                "Keep disclaimers and structured JSON requirements."
+            ),
+            user_message=json.dumps(
                 {
-                    "role": "system",
-                    "content": (
-                        "Generate prompt variants for a mock advisor-support agent. "
-                        "Each variant must improve evaluation quality without increasing unsafe advice. "
-                        "Keep disclaimers and structured JSON requirements."
-                    ),
+                    "baseline_prompt": baseline_prompt,
+                    "reflection": reflection,
+                    "max_variants": max_variants,
+                    "constraints": [
+                        "Do not claim to implement full GEPA.",
+                        "Do not enable real financial advice.",
+                        "Preserve JSON-only structured output requirement.",
+                    ],
                 },
-                {
-                    "role": "user",
-                    "content": json.dumps(
-                        {
-                            "baseline_prompt": baseline_prompt,
-                            "reflection": reflection,
-                            "max_variants": max_variants,
-                            "constraints": [
-                                "Do not claim to implement full GEPA.",
-                                "Do not enable real financial advice.",
-                                "Preserve JSON-only structured output requirement.",
-                            ],
-                        },
-                        indent=2,
-                        sort_keys=True,
-                    ),
-                },
-            ],
-            response_format={
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "PromptVariants",
-                    "schema": PromptVariants.model_json_schema(),
-                    "strict": False,
-                },
-            },
+                indent=2,
+                sort_keys=True,
+            ),
+            response_model=PromptVariants,
         )
-        content = response.choices[0].message.content or "{}"
-        return PromptVariants.model_validate_json(content).variants[:max_variants]
+        return result.output.variants[:max_variants]
 
     def _offline_variants(
         self,
