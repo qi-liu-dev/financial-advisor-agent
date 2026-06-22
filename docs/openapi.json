@@ -1,0 +1,3800 @@
+{
+  "components": {
+    "schemas": {
+      "AdvisorMemoryResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "advisor_id": {
+            "title": "Advisor Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/AdvisorPreferences"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "advisor_id",
+          "preferences",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AdvisorMemoryResponse",
+        "type": "object"
+      },
+      "AdvisorPreferences": {
+        "additionalProperties": false,
+        "properties": {
+          "detail_level": {
+            "default": "medium",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Detail Level",
+            "type": "string"
+          },
+          "preferred_language": {
+            "default": "en",
+            "title": "Preferred Language",
+            "type": "string"
+          },
+          "risk_focus": {
+            "default": "balanced",
+            "enum": [
+              "low",
+              "balanced",
+              "high"
+            ],
+            "title": "Risk Focus",
+            "type": "string"
+          },
+          "summary_style": {
+            "default": "balanced",
+            "enum": [
+              "brief",
+              "balanced",
+              "narrative"
+            ],
+            "title": "Summary Style",
+            "type": "string"
+          }
+        },
+        "title": "AdvisorPreferences",
+        "type": "object"
+      },
+      "AgentRunDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "advisor_id": {
+            "title": "Advisor Id",
+            "type": "string"
+          },
+          "advisor_preferences": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdvisorPreferences"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "agent_type": {
+            "$ref": "#/components/schemas/AgentType"
+          },
+          "client_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Request Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "evaluation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvaluationResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "full_input": {
+            "$ref": "#/components/schemas/RunInputSnapshot"
+          },
+          "has_evaluation": {
+            "title": "Has Evaluation",
+            "type": "boolean"
+          },
+          "input_hash": {
+            "title": "Input Hash",
+            "type": "string"
+          },
+          "latency_ms": {
+            "title": "Latency Ms",
+            "type": "number"
+          },
+          "model_name": {
+            "title": "Model Name",
+            "type": "string"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClientSummaryOutput"
+              },
+              {
+                "$ref": "#/components/schemas/MeetingNotesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/InvestmentReviewOutput"
+              }
+            ],
+            "title": "Output"
+          },
+          "owner_id": {
+            "title": "Owner Id",
+            "type": "string"
+          },
+          "prompt_version": {
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "provider_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Request Id"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "token_usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TokenUsage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "run_id",
+          "owner_id",
+          "advisor_id",
+          "agent_type",
+          "prompt_version",
+          "model_name",
+          "input_hash",
+          "latency_ms",
+          "has_evaluation",
+          "created_at",
+          "full_input",
+          "output"
+        ],
+        "title": "AgentRunDetail",
+        "type": "object"
+      },
+      "AgentRunPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AgentRunSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageMetadata"
+          }
+        },
+        "required": [
+          "items",
+          "page"
+        ],
+        "title": "AgentRunPage",
+        "type": "object"
+      },
+      "AgentRunSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "advisor_id": {
+            "title": "Advisor Id",
+            "type": "string"
+          },
+          "agent_type": {
+            "$ref": "#/components/schemas/AgentType"
+          },
+          "client_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Request Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "has_evaluation": {
+            "title": "Has Evaluation",
+            "type": "boolean"
+          },
+          "input_hash": {
+            "title": "Input Hash",
+            "type": "string"
+          },
+          "latency_ms": {
+            "title": "Latency Ms",
+            "type": "number"
+          },
+          "model_name": {
+            "title": "Model Name",
+            "type": "string"
+          },
+          "owner_id": {
+            "title": "Owner Id",
+            "type": "string"
+          },
+          "prompt_version": {
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "provider_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Request Id"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "owner_id",
+          "advisor_id",
+          "agent_type",
+          "prompt_version",
+          "model_name",
+          "input_hash",
+          "latency_ms",
+          "has_evaluation",
+          "created_at"
+        ],
+        "title": "AgentRunSummary",
+        "type": "object"
+      },
+      "AgentType": {
+        "enum": [
+          "client_summary",
+          "meeting_notes",
+          "investment_review"
+        ],
+        "title": "AgentType",
+        "type": "string"
+      },
+      "AuditEventPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEventResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageMetadata"
+          }
+        },
+        "required": [
+          "items",
+          "page"
+        ],
+        "title": "AuditEventPage",
+        "type": "object"
+      },
+      "AuditEventResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          },
+          "principal_id": {
+            "title": "Principal Id",
+            "type": "string"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Id"
+          },
+          "resource_type": {
+            "title": "Resource Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "principal_id",
+          "action",
+          "resource_type",
+          "created_at"
+        ],
+        "title": "AuditEventResponse",
+        "type": "object"
+      },
+      "BenchmarkDifficulty": {
+        "enum": [
+          "easy",
+          "medium",
+          "hard"
+        ],
+        "title": "BenchmarkDifficulty",
+        "type": "string"
+      },
+      "BenchmarkExpectation": {
+        "additionalProperties": false,
+        "properties": {
+          "must_mention": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Must Mention",
+            "type": "array"
+          },
+          "must_not_mention": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Must Not Mention",
+            "type": "array"
+          },
+          "required_citations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Required Citations",
+            "type": "array"
+          }
+        },
+        "title": "BenchmarkExpectation",
+        "type": "object"
+      },
+      "BenchmarkTaskResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_type": {
+            "$ref": "#/components/schemas/AgentType"
+          },
+          "difficulty": {
+            "$ref": "#/components/schemas/BenchmarkDifficulty"
+          },
+          "expected": {
+            "$ref": "#/components/schemas/BenchmarkExpectation"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClientSummaryPayload"
+              },
+              {
+                "$ref": "#/components/schemas/MeetingNotesPayload"
+              },
+              {
+                "$ref": "#/components/schemas/InvestmentReviewPayload"
+              }
+            ],
+            "title": "Payload"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "agent_type",
+          "difficulty",
+          "tags",
+          "payload",
+          "expected"
+        ],
+        "title": "BenchmarkTaskResponse",
+        "type": "object"
+      },
+      "ClientProfileData": {
+        "additionalProperties": false,
+        "properties": {
+          "age": {
+            "anyOf": [
+              {
+                "maximum": 130.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age"
+          },
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "constraints": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Constraints",
+            "type": "array"
+          },
+          "goals": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Goals",
+            "type": "array"
+          },
+          "household": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Household"
+          },
+          "investment_horizon_years": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Investment Horizon Years"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "risk_tolerance": {
+            "title": "Risk Tolerance",
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "risk_tolerance"
+        ],
+        "title": "ClientProfileData",
+        "type": "object"
+      },
+      "ClientSummaryOutput": {
+        "additionalProperties": false,
+        "properties": {
+          "citations_to_input": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Citations To Input",
+            "type": "array"
+          },
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "key_points": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Key Points",
+            "type": "array"
+          },
+          "missing_information": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing Information",
+            "type": "array"
+          },
+          "next_actions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Next Actions",
+            "type": "array"
+          },
+          "risks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Risks",
+            "type": "array"
+          },
+          "suitability_context": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Suitability Context",
+            "type": "array"
+          },
+          "summary": {
+            "minLength": 10,
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary",
+          "key_points",
+          "confidence"
+        ],
+        "title": "ClientSummaryOutput",
+        "type": "object"
+      },
+      "ClientSummaryPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "client_profile": {
+            "$ref": "#/components/schemas/ClientProfileData"
+          },
+          "portfolio_summary": {
+            "$ref": "#/components/schemas/PortfolioSummaryData"
+          }
+        },
+        "required": [
+          "client_profile",
+          "portfolio_summary"
+        ],
+        "title": "ClientSummaryPayload",
+        "type": "object"
+      },
+      "ClientWorkspaceResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/ClientProfileData"
+          },
+          "investment_proposals": {
+            "items": {
+              "$ref": "#/components/schemas/InvestmentProposalData"
+            },
+            "title": "Investment Proposals",
+            "type": "array"
+          },
+          "meetings": {
+            "items": {
+              "$ref": "#/components/schemas/MeetingData"
+            },
+            "title": "Meetings",
+            "type": "array"
+          },
+          "portfolios": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioSummaryData"
+            },
+            "title": "Portfolios",
+            "type": "array"
+          },
+          "synthetic_only": {
+            "const": true,
+            "default": true,
+            "title": "Synthetic Only",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "client",
+          "portfolios",
+          "meetings",
+          "investment_proposals"
+        ],
+        "title": "ClientWorkspaceResponse",
+        "type": "object"
+      },
+      "DeleteResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "deleted": {
+            "title": "Deleted",
+            "type": "boolean"
+          },
+          "resource_id": {
+            "title": "Resource Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deleted",
+          "resource_id"
+        ],
+        "title": "DeleteResponse",
+        "type": "object"
+      },
+      "EvaluationProvenance": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Model"
+          },
+          "benchmark_checks_enabled": {
+            "title": "Benchmark Checks Enabled",
+            "type": "boolean"
+          },
+          "caveat": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caveat"
+          },
+          "judge_is_distinct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Judge Is Distinct"
+          },
+          "judge_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Judge Model"
+          },
+          "llm_judge_enabled": {
+            "title": "Llm Judge Enabled",
+            "type": "boolean"
+          },
+          "llm_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Provider"
+          },
+          "rule_based_enabled": {
+            "default": true,
+            "title": "Rule Based Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "benchmark_checks_enabled",
+          "llm_judge_enabled"
+        ],
+        "title": "EvaluationProvenance",
+        "type": "object"
+      },
+      "EvaluationResult": {
+        "additionalProperties": false,
+        "properties": {
+          "advisor_usefulness": {
+            "$ref": "#/components/schemas/MetricScore"
+          },
+          "benchmark_expectations": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricScore"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "clarity": {
+            "$ref": "#/components/schemas/MetricScore"
+          },
+          "completeness": {
+            "$ref": "#/components/schemas/MetricScore"
+          },
+          "estimated_cost": {
+            "minimum": 0.0,
+            "title": "Estimated Cost",
+            "type": "number"
+          },
+          "faithfulness": {
+            "$ref": "#/components/schemas/MetricScore"
+          },
+          "feedback": {
+            "title": "Feedback",
+            "type": "string"
+          },
+          "format_correctness": {
+            "$ref": "#/components/schemas/MetricScore"
+          },
+          "latency_ms": {
+            "minimum": 0.0,
+            "title": "Latency Ms",
+            "type": "number"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvaluationProvenance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "risk_awareness": {
+            "$ref": "#/components/schemas/MetricScore"
+          },
+          "safety": {
+            "$ref": "#/components/schemas/MetricScore"
+          }
+        },
+        "required": [
+          "faithfulness",
+          "completeness",
+          "risk_awareness",
+          "clarity",
+          "advisor_usefulness",
+          "safety",
+          "format_correctness",
+          "latency_ms",
+          "estimated_cost",
+          "feedback"
+        ],
+        "title": "EvaluationResult",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthComponent": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "degraded",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "HealthComponent",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "active_prompt_count": {
+            "minimum": 0.0,
+            "title": "Active Prompt Count",
+            "type": "integer"
+          },
+          "database": {
+            "$ref": "#/components/schemas/HealthComponent"
+          },
+          "encryption_enabled": {
+            "title": "Encryption Enabled",
+            "type": "boolean"
+          },
+          "llm": {
+            "$ref": "#/components/schemas/HealthComponent"
+          },
+          "migration_version": {
+            "minimum": 0.0,
+            "title": "Migration Version",
+            "type": "integer"
+          },
+          "service": {
+            "title": "Service",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "degraded",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "service",
+          "version",
+          "database",
+          "llm",
+          "migration_version",
+          "active_prompt_count",
+          "encryption_enabled"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "InvestmentProposalData": {
+        "additionalProperties": false,
+        "properties": {
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "intended_outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intended Outcome"
+          },
+          "known_open_questions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Known Open Questions",
+            "type": "array"
+          },
+          "proposal_id": {
+            "title": "Proposal Id",
+            "type": "string"
+          },
+          "proposal_summary": {
+            "title": "Proposal Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "proposal_id",
+          "title",
+          "proposal_summary"
+        ],
+        "title": "InvestmentProposalData",
+        "type": "object"
+      },
+      "InvestmentReviewOutput": {
+        "additionalProperties": false,
+        "properties": {
+          "citations_to_input": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Citations To Input",
+            "type": "array"
+          },
+          "compliance_flags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Compliance Flags",
+            "type": "array"
+          },
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "key_points": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Key Points",
+            "type": "array"
+          },
+          "next_actions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Next Actions",
+            "type": "array"
+          },
+          "questions_for_advisor": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Questions For Advisor",
+            "type": "array"
+          },
+          "risks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Risks",
+            "type": "array"
+          },
+          "suitability_observations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Suitability Observations",
+            "type": "array"
+          },
+          "summary": {
+            "minLength": 10,
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary",
+          "key_points",
+          "confidence"
+        ],
+        "title": "InvestmentReviewOutput",
+        "type": "object"
+      },
+      "InvestmentReviewPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "client_profile": {
+            "$ref": "#/components/schemas/ClientProfileData"
+          },
+          "investment_proposal": {
+            "$ref": "#/components/schemas/InvestmentProposalData"
+          },
+          "portfolio_summary": {
+            "$ref": "#/components/schemas/PortfolioSummaryData"
+          }
+        },
+        "required": [
+          "client_profile",
+          "portfolio_summary",
+          "investment_proposal"
+        ],
+        "title": "InvestmentReviewPayload",
+        "type": "object"
+      },
+      "MeetingData": {
+        "additionalProperties": false,
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "meeting_id": {
+            "title": "Meeting Id",
+            "type": "string"
+          },
+          "transcript": {
+            "items": {
+              "$ref": "#/components/schemas/TranscriptTurn"
+            },
+            "minItems": 1,
+            "title": "Transcript",
+            "type": "array"
+          }
+        },
+        "required": [
+          "meeting_id",
+          "client_id",
+          "transcript"
+        ],
+        "title": "MeetingData",
+        "type": "object"
+      },
+      "MeetingNotesOutput": {
+        "additionalProperties": false,
+        "properties": {
+          "citations_to_input": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Citations To Input",
+            "type": "array"
+          },
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "decisions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Decisions",
+            "type": "array"
+          },
+          "follow_up_questions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Follow Up Questions",
+            "type": "array"
+          },
+          "key_points": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Key Points",
+            "type": "array"
+          },
+          "next_actions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Next Actions",
+            "type": "array"
+          },
+          "risks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Risks",
+            "type": "array"
+          },
+          "summary": {
+            "minLength": 10,
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary",
+          "key_points",
+          "confidence"
+        ],
+        "title": "MeetingNotesOutput",
+        "type": "object"
+      },
+      "MeetingNotesPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "meeting_id": {
+            "title": "Meeting Id",
+            "type": "string"
+          },
+          "transcript": {
+            "items": {
+              "$ref": "#/components/schemas/TranscriptTurn"
+            },
+            "minItems": 1,
+            "title": "Transcript",
+            "type": "array"
+          }
+        },
+        "required": [
+          "meeting_id",
+          "client_id",
+          "transcript"
+        ],
+        "title": "MeetingNotesPayload",
+        "type": "object"
+      },
+      "MemoryUpdateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "preferences": {
+            "$ref": "#/components/schemas/AdvisorPreferences"
+          }
+        },
+        "required": [
+          "preferences"
+        ],
+        "title": "MemoryUpdateRequest",
+        "type": "object"
+      },
+      "MetricScore": {
+        "additionalProperties": false,
+        "properties": {
+          "feedback": {
+            "minLength": 1,
+            "title": "Feedback",
+            "type": "string"
+          },
+          "score": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "score",
+          "feedback"
+        ],
+        "title": "MetricScore",
+        "type": "object"
+      },
+      "MockDataResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "dataset": {
+            "$ref": "#/components/schemas/MockDatasetName"
+          },
+          "items": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ClientProfileData"
+                },
+                {
+                  "$ref": "#/components/schemas/PortfolioSummaryData"
+                },
+                {
+                  "$ref": "#/components/schemas/MeetingData"
+                },
+                {
+                  "$ref": "#/components/schemas/InvestmentProposalData"
+                }
+              ]
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "synthetic_only": {
+            "const": true,
+            "default": true,
+            "title": "Synthetic Only",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "dataset",
+          "items"
+        ],
+        "title": "MockDataResponse",
+        "type": "object"
+      },
+      "MockDatasetName": {
+        "enum": [
+          "clients",
+          "portfolios",
+          "meetings",
+          "investment_proposals"
+        ],
+        "title": "MockDatasetName",
+        "type": "string"
+      },
+      "OptimisationBaselineResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "metrics": {
+            "$ref": "#/components/schemas/OptimisationMetrics"
+          },
+          "run_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Run Ids",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "metrics",
+          "run_ids"
+        ],
+        "title": "OptimisationBaselineResponse",
+        "type": "object"
+      },
+      "OptimisationCandidateResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "metrics": {
+            "$ref": "#/components/schemas/OptimisationMetrics"
+          },
+          "qualifies": {
+            "title": "Qualifies",
+            "type": "boolean"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "run_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Run Ids",
+            "type": "array"
+          },
+          "selected": {
+            "title": "Selected",
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PromptStatus"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "rationale",
+          "metrics",
+          "run_ids",
+          "status",
+          "qualifies",
+          "selected",
+          "reasons"
+        ],
+        "title": "OptimisationCandidateResponse",
+        "type": "object"
+      },
+      "OptimisationJobPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OptimisationJobResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageMetadata"
+          }
+        },
+        "required": [
+          "items",
+          "page"
+        ],
+        "title": "OptimisationJobPage",
+        "type": "object"
+      },
+      "OptimisationJobResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_type": {
+            "$ref": "#/components/schemas/AgentType"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "owner_id": {
+            "title": "Owner Id",
+            "type": "string"
+          },
+          "progress": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Progress",
+            "type": "number"
+          },
+          "request": {
+            "$ref": "#/components/schemas/OptimisationRequest"
+          },
+          "result_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Id"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OptimisationJobStatus"
+          }
+        },
+        "required": [
+          "job_id",
+          "owner_id",
+          "agent_type",
+          "status",
+          "progress",
+          "request",
+          "created_at"
+        ],
+        "title": "OptimisationJobResponse",
+        "type": "object"
+      },
+      "OptimisationJobStatus": {
+        "enum": [
+          "queued",
+          "running",
+          "completed",
+          "failed"
+        ],
+        "title": "OptimisationJobStatus",
+        "type": "string"
+      },
+      "OptimisationMetrics": {
+        "additionalProperties": false,
+        "properties": {
+          "estimated_cost": {
+            "minimum": 0.0,
+            "title": "Estimated Cost",
+            "type": "number"
+          },
+          "estimated_cost_stddev": {
+            "minimum": 0.0,
+            "title": "Estimated Cost Stddev",
+            "type": "number"
+          },
+          "latency_ms": {
+            "minimum": 0.0,
+            "title": "Latency Ms",
+            "type": "number"
+          },
+          "latency_ms_stddev": {
+            "minimum": 0.0,
+            "title": "Latency Ms Stddev",
+            "type": "number"
+          },
+          "quality": {
+            "minimum": 0.0,
+            "title": "Quality",
+            "type": "number"
+          },
+          "quality_stddev": {
+            "minimum": 0.0,
+            "title": "Quality Stddev",
+            "type": "number"
+          },
+          "safety": {
+            "minimum": 0.0,
+            "title": "Safety",
+            "type": "number"
+          },
+          "safety_stddev": {
+            "minimum": 0.0,
+            "title": "Safety Stddev",
+            "type": "number"
+          },
+          "sample_count": {
+            "minimum": 0.0,
+            "title": "Sample Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "quality",
+          "quality_stddev",
+          "safety",
+          "safety_stddev",
+          "latency_ms",
+          "latency_ms_stddev",
+          "estimated_cost",
+          "estimated_cost_stddev",
+          "sample_count"
+        ],
+        "title": "OptimisationMetrics",
+        "type": "object"
+      },
+      "OptimisationRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "advisor_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advisor Id"
+          },
+          "benchmark_limit": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Limit"
+          },
+          "max_variants": {
+            "default": 3,
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Max Variants",
+            "type": "integer"
+          },
+          "repetitions": {
+            "anyOf": [
+              {
+                "maximum": 10.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repetitions"
+          }
+        },
+        "title": "OptimisationRequest",
+        "type": "object"
+      },
+      "OptimisationResultPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OptimisationResultResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageMetadata"
+          }
+        },
+        "required": [
+          "items",
+          "page"
+        ],
+        "title": "OptimisationResultPage",
+        "type": "object"
+      },
+      "OptimisationResultResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_type": {
+            "$ref": "#/components/schemas/AgentType"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/OptimisationBaselineResponse"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/OptimisationCandidateResponse"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "optimisation_id": {
+            "title": "Optimisation Id",
+            "type": "integer"
+          },
+          "owner_id": {
+            "title": "Owner Id",
+            "type": "string"
+          },
+          "reflection": {
+            "title": "Reflection",
+            "type": "string"
+          },
+          "selected_versions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Selected Versions",
+            "type": "array"
+          },
+          "selection_note": {
+            "title": "Selection Note",
+            "type": "string"
+          },
+          "selection_policy": {
+            "$ref": "#/components/schemas/OptimisationSelectionPolicy"
+          }
+        },
+        "required": [
+          "optimisation_id",
+          "owner_id",
+          "agent_type",
+          "baseline",
+          "reflection",
+          "candidates",
+          "selected_versions",
+          "selection_policy",
+          "selection_note",
+          "created_at"
+        ],
+        "title": "OptimisationResultResponse",
+        "type": "object"
+      },
+      "OptimisationSelectionPolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "cost_tolerance_ratio": {
+            "minimum": 1.0,
+            "title": "Cost Tolerance Ratio",
+            "type": "number"
+          },
+          "latency_tolerance_ratio": {
+            "minimum": 1.0,
+            "title": "Latency Tolerance Ratio",
+            "type": "number"
+          },
+          "minimum_quality_delta": {
+            "minimum": 0.0,
+            "title": "Minimum Quality Delta",
+            "type": "number"
+          },
+          "safety_tolerance": {
+            "minimum": 0.0,
+            "title": "Safety Tolerance",
+            "type": "number"
+          }
+        },
+        "required": [
+          "minimum_quality_delta",
+          "safety_tolerance",
+          "latency_tolerance_ratio",
+          "cost_tolerance_ratio"
+        ],
+        "title": "OptimisationSelectionPolicy",
+        "type": "object"
+      },
+      "PageMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1.0,
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "minimum": 1.0,
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total_items": {
+            "minimum": 0.0,
+            "title": "Total Items",
+            "type": "integer"
+          },
+          "total_pages": {
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "page",
+          "page_size",
+          "total_items",
+          "total_pages"
+        ],
+        "title": "PageMetadata",
+        "type": "object"
+      },
+      "PortfolioSummaryData": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_allocation": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Asset Allocation",
+            "type": "object"
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "portfolio_id": {
+            "title": "Portfolio Id",
+            "type": "string"
+          },
+          "risk_notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Risk Notes",
+            "type": "array"
+          },
+          "total_value": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Value"
+          }
+        },
+        "required": [
+          "portfolio_id"
+        ],
+        "title": "PortfolioSummaryData",
+        "type": "object"
+      },
+      "PromptActivationResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "prompt": {
+            "$ref": "#/components/schemas/PromptVersionResponse"
+          }
+        },
+        "required": [
+          "message",
+          "prompt"
+        ],
+        "title": "PromptActivationResponse",
+        "type": "object"
+      },
+      "PromptStatus": {
+        "enum": [
+          "baseline",
+          "candidate",
+          "selected",
+          "rejected"
+        ],
+        "title": "PromptStatus",
+        "type": "string"
+      },
+      "PromptVersionPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PromptVersionResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageMetadata"
+          }
+        },
+        "required": [
+          "items",
+          "page"
+        ],
+        "title": "PromptVersionPage",
+        "type": "object"
+      },
+      "PromptVersionResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "activated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated At"
+          },
+          "agent_type": {
+            "$ref": "#/components/schemas/AgentType"
+          },
+          "average_scores": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OptimisationMetrics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "parent_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Version"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "reflection": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reflection"
+          },
+          "selected_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PromptStatus"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agent_type",
+          "version",
+          "prompt",
+          "status",
+          "is_active",
+          "created_at"
+        ],
+        "title": "PromptVersionResponse",
+        "type": "object"
+      },
+      "PurgeRunsResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "deleted_count": {
+            "minimum": 0.0,
+            "title": "Deleted Count",
+            "type": "integer"
+          },
+          "older_than_days": {
+            "minimum": 0.0,
+            "title": "Older Than Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "deleted_count",
+          "older_than_days"
+        ],
+        "title": "PurgeRunsResponse",
+        "type": "object"
+      },
+      "RunAgentRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "advisor_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advisor Id"
+          },
+          "agent_type": {
+            "$ref": "#/components/schemas/AgentType"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClientSummaryPayload"
+              },
+              {
+                "$ref": "#/components/schemas/MeetingNotesPayload"
+              },
+              {
+                "$ref": "#/components/schemas/InvestmentReviewPayload"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payload"
+          },
+          "preferences": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdvisorPreferences"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          }
+        },
+        "required": [
+          "agent_type"
+        ],
+        "title": "RunAgentRequest",
+        "type": "object"
+      },
+      "RunAgentResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "advisor_id": {
+            "title": "Advisor Id",
+            "type": "string"
+          },
+          "agent_type": {
+            "$ref": "#/components/schemas/AgentType"
+          },
+          "client_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Request Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "latency_ms": {
+            "minimum": 0.0,
+            "title": "Latency Ms",
+            "type": "number"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClientSummaryOutput"
+              },
+              {
+                "$ref": "#/components/schemas/MeetingNotesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/InvestmentReviewOutput"
+              }
+            ],
+            "title": "Output"
+          },
+          "prompt_version": {
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "provider_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Request Id"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "token_usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TokenUsage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "run_id",
+          "agent_type",
+          "advisor_id",
+          "prompt_version",
+          "output",
+          "latency_ms",
+          "created_at"
+        ],
+        "title": "RunAgentResponse",
+        "type": "object"
+      },
+      "RunInputSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "advisor_id": {
+            "title": "Advisor Id",
+            "type": "string"
+          },
+          "advisor_preferences": {
+            "$ref": "#/components/schemas/AdvisorPreferences"
+          },
+          "difficulty": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BenchmarkDifficulty"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expected": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BenchmarkExpectation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClientSummaryPayload"
+              },
+              {
+                "$ref": "#/components/schemas/MeetingNotesPayload"
+              },
+              {
+                "$ref": "#/components/schemas/InvestmentReviewPayload"
+              }
+            ],
+            "title": "Payload"
+          },
+          "repetition_index": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repetition Index"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          }
+        },
+        "required": [
+          "payload",
+          "advisor_id",
+          "advisor_preferences"
+        ],
+        "title": "RunInputSnapshot",
+        "type": "object"
+      },
+      "TokenUsage": {
+        "additionalProperties": true,
+        "properties": {
+          "completion_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Tokens"
+          },
+          "input_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Tokens"
+          },
+          "output_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Tokens"
+          },
+          "prompt_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Tokens"
+          },
+          "total_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Tokens"
+          }
+        },
+        "title": "TokenUsage",
+        "type": "object"
+      },
+      "TranscriptTurn": {
+        "additionalProperties": false,
+        "properties": {
+          "speaker": {
+            "title": "Speaker",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "turn_id": {
+            "title": "Turn Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "turn_id",
+          "speaker",
+          "text"
+        ],
+        "title": "TranscriptTurn",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "in": "header",
+        "name": "X-API-Key",
+        "type": "apiKey"
+      },
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Typed, authenticated API for evaluating and GEPA-inspired prompt optimisation of synthetic financial-advisory LLM agents.",
+    "title": "Financial Advisor Agent Optimizer",
+    "version": "0.3.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/audit-events": {
+      "get": {
+        "operationId": "audit_events_api_v1_audit_events_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "principal_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Principal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditEventPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Audit Events",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/v1/evaluate-run/{run_id}": {
+      "post": {
+        "operationId": "evaluate_run_api_v1_evaluate_run__run_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Evaluate Run",
+        "tags": [
+          "agent runs"
+        ]
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/memory/{advisor_id}": {
+      "delete": {
+        "operationId": "delete_memory_api_v1_memory__advisor_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "advisor_id",
+            "required": true,
+            "schema": {
+              "title": "Advisor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Delete Memory",
+        "tags": [
+          "advisor memory"
+        ]
+      },
+      "get": {
+        "operationId": "get_memory_api_v1_memory__advisor_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "advisor_id",
+            "required": true,
+            "schema": {
+              "title": "Advisor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdvisorMemoryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Get Memory",
+        "tags": [
+          "advisor memory"
+        ]
+      },
+      "post": {
+        "operationId": "update_memory_api_v1_memory__advisor_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "advisor_id",
+            "required": true,
+            "schema": {
+              "title": "Advisor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdvisorMemoryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Update Memory",
+        "tags": [
+          "advisor memory"
+        ]
+      }
+    },
+    "/api/v1/mock-data/workspaces/{client_id}": {
+      "get": {
+        "operationId": "client_workspace_api_v1_mock_data_workspaces__client_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "title": "Client Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Client Workspace",
+        "tags": [
+          "synthetic data"
+        ]
+      }
+    },
+    "/api/v1/mock-data/{dataset}": {
+      "get": {
+        "operationId": "mock_data_api_v1_mock_data__dataset__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dataset",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/MockDatasetName"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MockDataResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Mock Data",
+        "tags": [
+          "synthetic data"
+        ]
+      }
+    },
+    "/api/v1/optimisation-results": {
+      "get": {
+        "operationId": "list_optimisation_results_api_v1_optimisation_results_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "owner_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Owner Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "agent_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AgentType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agent Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimisationResultPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "List Optimisation Results",
+        "tags": [
+          "optimisation"
+        ]
+      }
+    },
+    "/api/v1/optimisation-results/{optimisation_id}": {
+      "get": {
+        "operationId": "get_optimisation_result_api_v1_optimisation_results__optimisation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "optimisation_id",
+            "required": true,
+            "schema": {
+              "title": "Optimisation Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimisationResultResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Get Optimisation Result",
+        "tags": [
+          "optimisation"
+        ]
+      }
+    },
+    "/api/v1/optimisations": {
+      "get": {
+        "operationId": "list_optimisations_api_v1_optimisations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OptimisationJobStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "owner_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Owner Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimisationJobPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "List Optimisations",
+        "tags": [
+          "optimisation"
+        ]
+      }
+    },
+    "/api/v1/optimisations/{agent_type}": {
+      "post": {
+        "operationId": "create_optimisation_api_v1_optimisations__agent_type__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_type",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AgentType"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OptimisationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimisationJobResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Create Optimisation",
+        "tags": [
+          "optimisation"
+        ]
+      }
+    },
+    "/api/v1/optimisations/{job_id}": {
+      "get": {
+        "operationId": "get_optimisation_api_v1_optimisations__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimisationJobResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Get Optimisation",
+        "tags": [
+          "optimisation"
+        ]
+      }
+    },
+    "/api/v1/prompt-versions/{agent_type}": {
+      "get": {
+        "operationId": "prompt_versions_api_v1_prompt_versions__agent_type__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_type",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AgentType"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptVersionPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Prompt Versions",
+        "tags": [
+          "prompts"
+        ]
+      }
+    },
+    "/api/v1/prompts/{agent_type}/active": {
+      "get": {
+        "operationId": "active_prompt_api_v1_prompts__agent_type__active_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_type",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AgentType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptVersionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Active Prompt",
+        "tags": [
+          "prompts"
+        ]
+      }
+    },
+    "/api/v1/prompts/{agent_type}/{version}/activate": {
+      "post": {
+        "operationId": "activate_prompt_api_v1_prompts__agent_type___version__activate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_type",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AgentType"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "title": "Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptActivationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Activate Prompt",
+        "tags": [
+          "prompts"
+        ]
+      }
+    },
+    "/api/v1/run-agent": {
+      "post": {
+        "operationId": "run_agent_api_v1_run_agent_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunAgentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunAgentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Run Agent",
+        "tags": [
+          "agent runs"
+        ]
+      }
+    },
+    "/api/v1/runs": {
+      "delete": {
+        "operationId": "purge_runs_api_v1_runs_delete",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "older_than_days",
+            "required": true,
+            "schema": {
+              "minimum": 0,
+              "title": "Older Than Days",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "all_owners",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "All Owners",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurgeRunsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Purge Runs",
+        "tags": [
+          "agent runs"
+        ]
+      },
+      "get": {
+        "operationId": "runs_api_v1_runs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "agent_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AgentType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agent Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "advisor_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Advisor Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "owner_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Owner Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "evaluated",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Evaluated"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRunPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Runs",
+        "tags": [
+          "agent runs"
+        ]
+      }
+    },
+    "/api/v1/runs/{run_id}": {
+      "delete": {
+        "operationId": "delete_run_api_v1_runs__run_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Delete Run",
+        "tags": [
+          "agent runs"
+        ]
+      },
+      "get": {
+        "operationId": "get_run_detail_api_v1_runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRunDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Get Run Detail",
+        "tags": [
+          "agent runs"
+        ]
+      }
+    },
+    "/api/v1/tasks": {
+      "get": {
+        "operationId": "tasks_api_v1_tasks_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "agent_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AgentType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agent Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BenchmarkTaskResponse"
+                  },
+                  "title": "Response Tasks Api V1 Tasks Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Tasks",
+        "tags": [
+          "synthetic data"
+        ]
+      }
+    }
+  }
+}

@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+from statistics import pstdev
 from typing import Any
 
 from backend.config import get_settings
 from backend.evaluation.llm_judge import JudgeEvaluation
-from backend.models.schemas import EvaluationResult, MetricScore
+from backend.models.schemas import (
+    EvaluationProvenance,
+    EvaluationResult,
+    MetricScore,
+    OptimisationMetrics,
+)
 
 
 def estimate_cost(token_usage: dict[str, Any] | None) -> float:
@@ -37,11 +43,15 @@ def combine_evaluations(
     latency_ms: float,
     token_usage: dict[str, Any] | None,
     benchmark_expectations: MetricScore | None = None,
+    provenance: EvaluationProvenance | None = None,
 ) -> EvaluationResult:
     return EvaluationResult(
         faithfulness=judge_scores.faithfulness,
         completeness=judge_scores.completeness,
-        risk_awareness=_lower_score(judge_scores.risk_awareness, rule_scores.get("risk_awareness")),
+        risk_awareness=_lower_score(
+            judge_scores.risk_awareness,
+            rule_scores.get("risk_awareness"),
+        ),
         clarity=_lower_score(judge_scores.clarity, rule_scores.get("clarity")),
         advisor_usefulness=judge_scores.advisor_usefulness,
         safety=_lower_score(judge_scores.safety, rule_scores.get("safety")),
@@ -50,41 +60,53 @@ def combine_evaluations(
         latency_ms=latency_ms,
         estimated_cost=estimate_cost(token_usage),
         feedback=judge_scores.feedback,
+        provenance=provenance,
     )
 
 
-def average_quality(scores: list[EvaluationResult]) -> dict[str, float]:
+def evaluation_quality_score(score: EvaluationResult) -> float:
+    fields = [
+        score.faithfulness.score,
+        score.completeness.score,
+        score.risk_awareness.score,
+        score.clarity.score,
+        score.advisor_usefulness.score,
+        score.format_correctness.score,
+    ]
+    if score.benchmark_expectations is not None:
+        fields.append(score.benchmark_expectations.score)
+    return sum(fields) / len(fields)
+
+
+def average_quality(scores: list[EvaluationResult]) -> OptimisationMetrics:
     if not scores:
-        return {
-            "quality": 0.0,
-            "safety": 0.0,
-            "latency_ms": 0.0,
-            "estimated_cost": 0.0,
-        }
+        return OptimisationMetrics(
+            quality=0.0,
+            quality_stddev=0.0,
+            safety=0.0,
+            safety_stddev=0.0,
+            latency_ms=0.0,
+            latency_ms_stddev=0.0,
+            estimated_cost=0.0,
+            estimated_cost_stddev=0.0,
+            sample_count=0,
+        )
 
-    quality_fields = [
-        "faithfulness",
-        "completeness",
-        "risk_awareness",
-        "clarity",
-        "advisor_usefulness",
-        "format_correctness",
-    ]
-    quality_scores = [
-        getattr(score, field).score for score in scores for field in quality_fields
-    ]
-    quality_scores.extend(
-        score.benchmark_expectations.score
-        for score in scores
-        if score.benchmark_expectations is not None
+    quality_values = [evaluation_quality_score(score) for score in scores]
+    safety_values = [float(score.safety.score) for score in scores]
+    latency_values = [score.latency_ms for score in scores]
+    cost_values = [score.estimated_cost for score in scores]
+    return OptimisationMetrics(
+        quality=round(_mean(quality_values), 3),
+        quality_stddev=round(_stddev(quality_values), 3),
+        safety=round(_mean(safety_values), 3),
+        safety_stddev=round(_stddev(safety_values), 3),
+        latency_ms=round(_mean(latency_values), 3),
+        latency_ms_stddev=round(_stddev(latency_values), 3),
+        estimated_cost=round(_mean(cost_values), 8),
+        estimated_cost_stddev=round(_stddev(cost_values), 8),
+        sample_count=len(scores),
     )
-    quality = sum(quality_scores) / len(quality_scores)
-    return {
-        "quality": round(quality, 3),
-        "safety": round(sum(score.safety.score for score in scores) / len(scores), 3),
-        "latency_ms": round(sum(score.latency_ms for score in scores) / len(scores), 3),
-        "estimated_cost": round(sum(score.estimated_cost for score in scores) / len(scores), 8),
-    }
 
 
 def _lower_score(primary: MetricScore, secondary: MetricScore | None) -> MetricScore:
@@ -94,3 +116,11 @@ def _lower_score(primary: MetricScore, secondary: MetricScore | None) -> MetricS
         score=secondary.score,
         feedback=f"{primary.feedback} Rule-based check: {secondary.feedback}",
     )
+
+
+def _mean(values: list[float]) -> float:
+    return sum(values) / len(values)
+
+
+def _stddev(values: list[float]) -> float:
+    return pstdev(values) if len(values) > 1 else 0.0
