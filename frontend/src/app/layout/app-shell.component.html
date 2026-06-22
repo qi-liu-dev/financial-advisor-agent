@@ -1,0 +1,90 @@
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<div class="shell">
+  <aside class="sidebar" [class.sidebar--open]="menuOpen()">
+    <div class="brand">
+      <div class="brand__mark">FA</div>
+      <div><strong>Advisor Agent Lab</strong><span>Evaluation & optimisation</span></div>
+      <button
+        class="sidebar__close"
+        type="button"
+        aria-label="Close navigation"
+        (click)="closeMenu()"
+      >
+        <app-icon name="close" />
+      </button>
+    </div>
+
+    <nav aria-label="Primary navigation">
+      @for (item of navItems; track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="nav-link--active"
+          [routerLinkActiveOptions]="{ exact: item.exact || false }"
+          class="nav-link"
+          (click)="closeMenu()"
+        >
+          <app-icon [name]="item.icon" />
+          <span
+            ><strong>{{ item.label }}</strong
+            ><small>{{ item.description }}</small></span
+          >
+        </a>
+      }
+    </nav>
+
+    <div class="system-card">
+      <div class="system-card__top">
+        <span>API status</span>
+        <app-status-badge
+          [status]="healthReachable() ? health()?.status || 'ok' : 'error'"
+          [label]="healthReachable() ? health()?.status || 'online' : 'offline'"
+        />
+      </div>
+      <div class="system-card__row">
+        <span>Database</span><strong>{{ health()?.database?.status || '—' }}</strong>
+      </div>
+      <div class="system-card__row">
+        <span>LLM provider</span><strong>{{ health()?.llm?.status || '—' }}</strong>
+      </div>
+      <div class="system-card__row">
+        <span>API version</span><strong>{{ health()?.version || '—' }}</strong>
+      </div>
+    </div>
+  </aside>
+
+  @if (menuOpen()) {
+    <button class="backdrop" aria-label="Close navigation" (click)="closeMenu()"></button>
+  }
+
+  <section class="workspace">
+    <header class="topbar">
+      <button
+        class="mobile-menu"
+        type="button"
+        aria-label="Open navigation"
+        (click)="menuOpen.set(true)"
+      >
+        <app-icon name="menu" />
+      </button>
+      <div class="topbar__context">
+        <span class="environment-dot"></span>
+        <span>Synthetic data environment</span>
+      </div>
+      <div class="topbar__actions">
+        <div class="advisor-chip">
+          <span>Advisor</span><strong>{{ session.advisorId() }}</strong>
+        </div>
+        <button
+          class="icon-button"
+          type="button"
+          [attr.aria-label]="theme.dark() ? 'Use light theme' : 'Use dark theme'"
+          (click)="theme.toggle()"
+        >
+          <app-icon [name]="theme.dark() ? 'sun' : 'moon'" />
+        </button>
+      </div>
+    </header>
+    <main id="main-content" tabindex="-1"><router-outlet /></main>
+  </section>
+</div>
+<app-toast-outlet />

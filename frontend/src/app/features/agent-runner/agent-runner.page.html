@@ -1,0 +1,262 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <p class="page-header__eyebrow">Structured agent experiment</p>
+      <h1>Agent playground</h1>
+      <p class="page-header__description">
+        Run a specialised financial-advisory agent against a benchmark case or custom synthetic
+        JSON, choose a prompt version, and inspect the schema-validated result.
+      </p>
+    </div>
+    <div class="page-actions">
+      <a class="button button--secondary" routerLink="/tasks"
+        ><app-icon name="tasks" />Browse benchmarks</a
+      >
+    </div>
+  </header>
+
+  <div class="playground-grid">
+    <form class="card configuration" [formGroup]="form" (ngSubmit)="run()">
+      <header class="card-header">
+        <div>
+          <h2>Run configuration</h2>
+          <p>All inputs shown here must remain synthetic.</p>
+        </div>
+        <app-status-badge status="ok" label="Typed output" />
+      </header>
+      <div class="card-body configuration__body">
+        @if (importedWorkspace(); as workspace) {
+          <div class="workspace-banner">
+            <app-icon name="check" />
+            <div>
+              <strong>Workspace imported</strong
+              ><span
+                >{{ workspace.client.name || workspace.client.client_id }} · synthetic data</span
+              >
+            </div>
+            <button type="button" (click)="importedWorkspace.set(null); resetCustomPayload()">
+              Remove
+            </button>
+          </div>
+        }
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="agent-type">Agent</label
+            ><select id="agent-type" class="select" formControlName="agentType">
+              <option value="client_summary">Client Summary</option>
+              <option value="meeting_notes">Meeting Notes</option>
+              <option value="investment_review">Investment Review</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="advisor-id">Advisor ID</label
+            ><input id="advisor-id" class="input" formControlName="advisorId" autocomplete="off" />
+            @if (form.controls.advisorId.touched && form.controls.advisorId.invalid) {
+              <small class="text-danger">Advisor ID is required.</small>
+            }
+          </div>
+          <div class="field field--full">
+            <span class="field-label">Input source</span>
+            <div class="segmented">
+              <button
+                type="button"
+                [class.active]="form.controls.source.value === 'benchmark'"
+                (click)="setSource('benchmark')"
+              >
+                Benchmark task</button
+              ><button
+                type="button"
+                [class.active]="form.controls.source.value === 'custom'"
+                (click)="setSource('custom')"
+              >
+                Custom JSON
+              </button>
+            </div>
+          </div>
+
+          @if (form.controls.source.value === 'benchmark') {
+            <div class="field field--full">
+              <label for="task-id">Benchmark task</label
+              ><select id="task-id" class="select" formControlName="taskId">
+                @for (task of matchingTasks(); track task.task_id) {
+                  <option [value]="task.task_id">
+                    {{ task.task_id }} · {{ task.difficulty }} · {{ task.tags.join(', ') }}
+                  </option>
+                }
+              </select>
+              @if (selectedTask(); as task) {
+                <small
+                  >{{ task.expected.must_mention.length }} required concepts,
+                  {{ task.expected.must_not_mention.length }} prohibited concepts and
+                  {{ task.expected.required_citations.length }} citation requirements.</small
+                >
+              }
+            </div>
+          } @else {
+            <div class="field field--full">
+              <div class="field-heading">
+                <label for="custom-payload">Custom synthetic payload</label
+                ><button type="button" class="text-button" (click)="resetCustomPayload()">
+                  Reset template
+                </button>
+              </div>
+              <textarea
+                id="custom-payload"
+                class="textarea payload-editor"
+                formControlName="customPayload"
+                spellcheck="false"
+              ></textarea>
+              @if (payloadError()) {
+                <small class="text-danger">{{ payloadError() }}</small>
+              } @else {
+                <small
+                  >The backend validates this object against the selected agent's Pydantic payload
+                  schema.</small
+                >
+              }
+            </div>
+          }
+
+          <div class="field field--full">
+            <label for="prompt-version">Prompt version</label
+            ><select id="prompt-version" class="select" formControlName="promptVersion">
+              <option value="">Current active prompt</option>
+              @for (prompt of promptVersions(); track prompt.version) {
+                <option [value]="prompt.version">
+                  {{ prompt.version }} · {{ prompt.status
+                  }}{{ prompt.is_active ? ' · active' : '' }}
+                </option>
+              }
+            </select>
+            @if (selectedPrompt(); as prompt) {
+              <small
+                >Testing {{ prompt.status }} version created
+                {{ prompt.created_at | date: 'mediumDate' }}. Selecting a candidate here does not
+                activate it.</small
+              >
+            }
+          </div>
+        </div>
+
+        <div class="preference-heading">
+          <div>
+            <h3>Advisor preferences</h3>
+            <p>Personalise tone and emphasis without changing the benchmark input.</p>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="summary-style">Summary style</label
+            ><select id="summary-style" class="select" formControlName="summaryStyle">
+              <option value="brief">Brief</option>
+              <option value="balanced">Balanced</option>
+              <option value="narrative">Narrative</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="detail-level">Detail level</label
+            ><select id="detail-level" class="select" formControlName="detailLevel">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="risk-focus">Risk focus</label
+            ><select id="risk-focus" class="select" formControlName="riskFocus">
+              <option value="low">Low</option>
+              <option value="balanced">Balanced</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="preferred-language">Preferred language</label
+            ><input
+              id="preferred-language"
+              class="input"
+              formControlName="preferredLanguage"
+              placeholder="en, nl, zh…"
+            />
+          </div>
+        </div>
+      </div>
+      <footer class="run-footer">
+        <div>
+          <strong>{{ labels[form.controls.agentType.value] }}</strong
+          ><span>{{
+            form.controls.source.value === 'benchmark'
+              ? 'Repeatable benchmark input'
+              : 'Custom synthetic payload'
+          }}</span>
+        </div>
+        <button
+          class="button run-button"
+          type="submit"
+          [disabled]="running() || loadingResources()"
+        >
+          <app-icon [name]="running() ? 'refresh' : 'play'" />{{
+            running() ? 'Running agent…' : 'Run agent'
+          }}
+        </button>
+      </footer>
+    </form>
+
+    <section id="run-result" class="result-column">
+      @if (running()) {
+        <div class="card result-loading">
+          <div class="pulse-mark"><app-icon name="flask" /></div>
+          <h2>Running {{ labels[form.controls.agentType.value] }}</h2>
+          <p>The provider call, structured-output validation and trace logging are in progress.</p>
+          <div class="progress-line"><span></span></div>
+        </div>
+      } @else if (result(); as run) {
+        <section class="card result-card">
+          <header class="card-header">
+            <div>
+              <p class="result-kicker">Run completed</p>
+              <h2>{{ labels[run.agent_type] }}</h2>
+              <p class="mono">{{ run.run_id }}</p>
+            </div>
+            <app-status-badge status="completed" />
+          </header>
+          <div class="result-metrics">
+            <div>
+              <span>Prompt</span><strong>{{ run.prompt_version }}</strong>
+            </div>
+            <div>
+              <span>Latency</span><strong>{{ run.latency_ms / 1000 | number: '1.2-2' }} s</strong>
+            </div>
+            <div>
+              <span>Total tokens</span><strong>{{ run.token_usage?.total_tokens ?? '—' }}</strong>
+            </div>
+            <div>
+              <span>Created</span><strong>{{ run.created_at | date: 'HH:mm:ss' }}</strong>
+            </div>
+          </div>
+          <div class="card-body result-body">
+            <app-agent-output [output]="run.output" />
+            <app-json-viewer [data]="run" title="Complete typed API response" />
+          </div>
+          <footer class="result-footer">
+            <div>
+              <span>Client request ID</span
+              ><code>{{ run.client_request_id || 'Unavailable' }}</code>
+            </div>
+            <a class="button" routerLink="/runs" [queryParams]="{ runId: run.run_id }"
+              ><app-icon name="chart" />Evaluate this run</a
+            >
+          </footer>
+        </section>
+      } @else {
+        <div class="card result-empty">
+          <app-empty-state
+            title="Ready for an agent run"
+            message="Configure an agent on the left. The schema-validated output, token usage, latency and request IDs will appear here."
+            icon="playground"
+          />
+        </div>
+      }
+    </section>
+  </div>
+</div>

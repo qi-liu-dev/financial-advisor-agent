@@ -16,7 +16,7 @@ A FastAPI prototype for building, evaluating, and improving structured LLM agent
 - Persistent asynchronous optimisation jobs with queue/running/completed/failed status and progress polling.
 - Versioned database migrations, indexed queries, pagination, owner isolation, retention/delete operations, audit events, and optional field-level encryption.
 - Versioned `/api/v1` API, Angular-compatible CORS, API-key or Azure Easy Auth identity, request IDs, safe error responses, and a demo rate limiter.
-- Docker support and 43 automated tests.
+- Docker support, 43 backend tests, and 8 frontend tests.
 
 ## Architecture
 
@@ -71,6 +71,13 @@ backend/
   database.py         SQLite connections and versioned migrations
   main.py             FastAPI application factory and lifespan
 
+frontend/             Angular 21 operations and evaluation dashboard
+  src/app/core/       Typed HTTP, auth/session, interceptors, shared services
+  src/app/features/   Overview, tasks, playground, runs, optimiser, preferences
+  src/app/shared/     Reusable metrics, scores, JSON, output, chart, and status UI
+  proxy.conf.json     Local same-origin proxy to FastAPI
+  public/             Azure Static Web Apps routing and security headers
+
 tests/                Unit and API/integration tests
 ```
 
@@ -99,11 +106,26 @@ http://127.0.0.1:8000/docs
 http://127.0.0.1:8000/openapi.json
 ```
 
-Run tests and static checks:
+Run the complete Angular dashboard in a second terminal:
+
+```bash
+cd frontend
+npm ci
+npm start
+```
+
+Open `http://localhost:4200`. The development proxy forwards `/api/*` to FastAPI, so the browser does not need a separate development CORS workaround.
+
+Run backend and frontend checks:
 
 ```bash
 python -m pytest -q
 python -m compileall -q backend tests
+
+cd frontend
+npm run build
+npm run test:ci
+
 # Optional after installing Ruff:
 python -m ruff check backend tests
 ```
@@ -187,6 +209,19 @@ AUTH_MODE=azure_easy_auth
 This mode reads the authenticated principal and roles from headers injected by Azure Container Apps/App Service authentication. Do not enable it on an endpoint that can be reached while bypassing that trusted authentication layer.
 
 Non-admin principals only see their own run, memory, optimisation, and result data. Sensitive run-detail reads and data-changing actions produce audit events.
+
+## Angular dashboard
+
+The checked-in `frontend/` application is a full AI Agent Evaluation and Optimisation Dashboard rather than a chat wrapper. It provides:
+
+- an overview of runs, sampled quality/safety/cost, latency, active prompts, health, and optimisation activity;
+- a searchable benchmark catalogue with task expectations and one-click playground handoff;
+- an agent playground for benchmark tasks, custom JSON, prompt versions, advisor preferences, and synthetic client workspaces;
+- paginated run inspection with typed output, trace metadata, seven evaluation dimensions, provenance, re-evaluation, and deletion;
+- asynchronous prompt optimisation with live polling, reflection, repeated-run statistics, policy reasons, Pareto visualisation, candidate comparison, and explicit activation;
+- advisor-memory management, optional development API-key handling, Azure Easy Auth links, and a client/portfolio/meeting/proposal workspace browser.
+
+All six feature pages are lazy-loaded. The frontend uses relative `/api/v1` URLs, strict TypeScript, standalone Angular components, reactive forms, signals, reusable visual components, and no third-party UI or chart runtime dependency. See `frontend/README.md` for local and Azure Static Web Apps instructions.
 
 ## Browser and Angular integration
 
@@ -414,7 +449,8 @@ The suite includes:
 - GEPA-inspired loop behavior with mocked providers.
 
 ```text
-43 passed
+Backend: 43 passed
+Frontend: 8 passed
 ```
 
 ## Remaining production work

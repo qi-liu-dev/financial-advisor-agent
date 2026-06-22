@@ -1,0 +1,289 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <p class="page-header__eyebrow">Trace inspection and AI quality assurance</p>
+      <h1>Run evaluation</h1>
+      <p class="page-header__description">
+        Inspect one stored agent run at a time, compare the structured output with its synthetic
+        input and generate a multi-dimensional evaluation scorecard.
+      </p>
+    </div>
+    <div class="page-actions">
+      <button
+        class="button button--secondary"
+        type="button"
+        (click)="loadRuns(runsPage()?.page?.page || 1)"
+      >
+        <app-icon name="refresh" />Refresh runs
+      </button>
+    </div>
+  </header>
+
+  <form class="filter-bar card" [formGroup]="filters" (ngSubmit)="loadRuns(1)">
+    <div class="field">
+      <label for="run-agent-filter">Agent</label
+      ><select id="run-agent-filter" class="select" formControlName="agentType">
+        <option value="">All agents</option>
+        <option value="client_summary">Client Summary</option>
+        <option value="meeting_notes">Meeting Notes</option>
+        <option value="investment_review">Investment Review</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="run-advisor-filter">Advisor ID</label
+      ><input
+        id="run-advisor-filter"
+        class="input"
+        formControlName="advisorId"
+        placeholder="Any advisor"
+      />
+    </div>
+    <div class="field">
+      <label for="evaluated-filter">Evaluation</label
+      ><select id="evaluated-filter" class="select" formControlName="evaluated">
+        <option value="">All runs</option>
+        <option value="true">Evaluated</option>
+        <option value="false">Not evaluated</option>
+      </select>
+    </div>
+    <button class="button" type="submit">Apply filters</button>
+  </form>
+
+  <div class="runs-layout">
+    <section class="card run-list">
+      <header class="card-header">
+        <div>
+          <h2>Agent runs</h2>
+          <p>{{ runsPage()?.page?.total_items ?? 0 }} matching traces</p>
+        </div>
+      </header>
+      @if (loadingList()) {
+        <app-loading-state label="Loading run history…" />
+      } @else if (runsPage()?.items?.length) {
+        <div class="run-list__body">
+          @for (run of runsPage()!.items; track run.run_id) {
+            <button
+              type="button"
+              class="run-row"
+              [class.run-row--selected]="selectedRun()?.run_id === run.run_id"
+              (click)="selectRun(run.run_id)"
+            >
+              <div class="run-row__top">
+                <code>{{ shortId(run.run_id) }}</code
+                ><app-status-badge [status]="run.has_evaluation ? 'evaluated' : 'pending'" />
+              </div>
+              <strong>{{ labels[run.agent_type] }}</strong>
+              <div class="run-row__meta">
+                <span>{{ run.prompt_version }}</span
+                ><span>{{ run.latency_ms / 1000 | number: '1.2-2' }} s</span
+                ><span>{{ run.created_at | date: 'MMM d, HH:mm' }}</span>
+              </div>
+            </button>
+          }
+        </div>
+        <div class="pagination-wrap">
+          <app-pagination [page]="runsPage()!.page" (pageChange)="loadRuns($event)" />
+        </div>
+      } @else {
+        <app-empty-state
+          title="No matching runs"
+          message="Run an agent or change the current filters."
+          icon="runs"
+        />
+      }
+    </section>
+
+    <section class="run-detail">
+      @if (loadingDetail()) {
+        <div class="card"><app-loading-state label="Loading complete run trace…" /></div>
+      } @else if (selectedRun(); as run) {
+        <article class="card detail-card">
+          <header class="card-header detail-header">
+            <div>
+              <p class="detail-kicker">{{ labels[run.agent_type] }}</p>
+              <h2 class="mono">{{ run.run_id }}</h2>
+              <p>{{ run.created_at | date: 'medium' }} · advisor {{ run.advisor_id }}</p>
+            </div>
+            <div class="detail-actions">
+              <app-status-badge [status]="run.has_evaluation ? 'evaluated' : 'pending'" /><button
+                class="button button--danger button--small"
+                type="button"
+                (click)="deleteSelected()"
+                [disabled]="deleting()"
+              >
+                <app-icon name="trash" />Delete
+              </button>
+            </div>
+          </header>
+          <div class="trace-metrics">
+            <div>
+              <span>Prompt version</span><strong>{{ run.prompt_version }}</strong>
+            </div>
+            <div>
+              <span>Model</span><strong>{{ run.model_name }}</strong>
+            </div>
+            <div>
+              <span>Latency</span><strong>{{ run.latency_ms / 1000 | number: '1.2-2' }} s</strong>
+            </div>
+            <div>
+              <span>Total tokens</span><strong>{{ run.token_usage?.total_tokens ?? '—' }}</strong>
+            </div>
+          </div>
+          <div class="card-body detail-body">
+            <section>
+              <div class="section-title inner-title">
+                <div>
+                  <h2>Structured agent output</h2>
+                  <p>Validated against the agent-specific Pydantic schema.</p>
+                </div>
+              </div>
+              <app-agent-output [output]="run.output" />
+            </section>
+
+            <section class="evaluation-section">
+              <div class="section-title inner-title">
+                <div>
+                  <h2>Evaluation scorecard</h2>
+                  <p>
+                    Rule checks, benchmark expectations and the configured judge are combined by the
+                    shared evaluation service.
+                  </p>
+                </div>
+                @if (!run.evaluation) {
+                  <button
+                    class="button"
+                    type="button"
+                    (click)="evaluate()"
+                    [disabled]="evaluating()"
+                  >
+                    <app-icon name="chart" />{{ evaluating() ? 'Evaluating…' : 'Evaluate run' }}
+                  </button>
+                } @else {
+                  <button
+                    class="button button--secondary button--small"
+                    type="button"
+                    (click)="evaluate()"
+                    [disabled]="evaluating()"
+                  >
+                    <app-icon name="refresh" />Re-evaluate
+                  </button>
+                }
+              </div>
+              @if (run.evaluation; as evaluation) {
+                <div class="evaluation-summary">
+                  <div>
+                    <span>Estimated cost</span
+                    ><strong>{{
+                      evaluation.estimated_cost | currency: 'USD' : 'symbol' : '1.5-5'
+                    }}</strong>
+                  </div>
+                  <div>
+                    <span>Evaluation latency reference</span
+                    ><strong>{{ evaluation.latency_ms / 1000 | number: '1.2-2' }} s</strong>
+                  </div>
+                  <div>
+                    <span>LLM judge</span
+                    ><strong>{{
+                      evaluation.provenance?.llm_judge_enabled ? 'Enabled' : 'Disabled'
+                    }}</strong>
+                  </div>
+                  <div>
+                    <span>Benchmark checks</span
+                    ><strong>{{
+                      evaluation.provenance?.benchmark_checks_enabled ? 'Enabled' : 'Not available'
+                    }}</strong>
+                  </div>
+                </div>
+                <div class="score-grid">
+                  @for (entry of metrics(evaluation); track entry.label) {
+                    <app-score-bar
+                      [label]="entry.label"
+                      [metric]="entry.metric"
+                      [showFeedback]="true"
+                    />
+                  }
+                </div>
+                <div class="feedback-card">
+                  <h3>Combined evaluator feedback</h3>
+                  <p>{{ evaluation.feedback }}</p>
+                </div>
+                @if (evaluation.provenance; as provenance) {
+                  <div class="provenance">
+                    <div>
+                      <span>Rule-based checks</span
+                      ><app-status-badge
+                        [status]="provenance.rule_based_enabled ? 'ok' : 'error'"
+                        [label]="provenance.rule_based_enabled ? 'Enabled' : 'Disabled'"
+                      />
+                    </div>
+                    <div>
+                      <span>Provider</span
+                      ><strong>{{ provenance.llm_provider || 'Offline evaluation' }}</strong>
+                    </div>
+                    <div>
+                      <span>Agent model</span><strong>{{ provenance.agent_model || '—' }}</strong>
+                    </div>
+                    <div>
+                      <span>Judge model</span><strong>{{ provenance.judge_model || '—' }}</strong>
+                    </div>
+                    <div>
+                      <span>Distinct judge</span
+                      ><app-status-badge
+                        [status]="
+                          provenance.judge_is_distinct === true
+                            ? 'ok'
+                            : provenance.judge_is_distinct === false
+                              ? 'warning'
+                              : 'pending'
+                        "
+                        [label]="
+                          provenance.judge_is_distinct === true
+                            ? 'Yes'
+                            : provenance.judge_is_distinct === false
+                              ? 'No'
+                              : 'N/A'
+                        "
+                      />
+                    </div>
+                  </div>
+                  @if (provenance.caveat) {
+                    <div class="callout callout--warning">{{ provenance.caveat }}</div>
+                  }
+                }
+              } @else {
+                <div class="evaluation-empty">
+                  <app-icon name="chart" />
+                  <div>
+                    <strong>This run has not been evaluated</strong>
+                    <p>
+                      Generate the seven-dimensional scorecard and benchmark feedback when an LLM
+                      provider is configured.
+                    </p>
+                  </div>
+                </div>
+              }
+            </section>
+
+            <section class="raw-section">
+              <div class="two-column">
+                <app-json-viewer
+                  [data]="run.full_input"
+                  title="Stored input snapshot"
+                /><app-json-viewer [data]="run.advisor_preferences" title="Advisor preferences" />
+              </div>
+              <app-json-viewer [data]="run" title="Complete run record" />
+            </section>
+          </div>
+        </article>
+      } @else {
+        <div class="card">
+          <app-empty-state
+            title="Select a run"
+            message="Choose a trace from the list to inspect its input, structured output and evaluation."
+            icon="runs"
+          />
+        </div>
+      }
+    </section>
+  </div>
+</div>

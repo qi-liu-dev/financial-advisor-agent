@@ -1,0 +1,594 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <p class="page-header__eyebrow">GEPA-inspired prompt lifecycle</p>
+      <h1>Prompt optimizer</h1>
+      <p class="page-header__description">
+        Run repeated benchmarks, reflect on weak cases, generate prompt variants and compare
+        quality, safety, latency and cost before an administrator explicitly promotes a selected
+        version.
+      </p>
+    </div>
+    <div class="page-actions">
+      <select
+        class="select agent-select"
+        aria-label="Agent type"
+        [value]="agent()"
+        (change)="changeAgent($any($event.target).value)"
+      >
+        <option value="client_summary">Client Summary</option>
+        <option value="meeting_notes">Meeting Notes</option>
+        <option value="investment_review">Investment Review</option>
+      </select>
+      <button
+        class="button button--secondary"
+        type="button"
+        (click)="load()"
+        [disabled]="loading()"
+      >
+        <app-icon name="refresh" />Refresh
+      </button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <app-loading-state label="Loading prompt lifecycle and optimisation history…" />
+  } @else {
+    <div class="top-grid">
+      <section class="card active-prompt-card">
+        <header class="card-header">
+          <div>
+            <h2>Current active prompt</h2>
+            <p>{{ labels[agent()] }} default</p>
+          </div>
+          @if (activePrompt(); as active) {
+            <app-status-badge status="active" [label]="active.version" />
+          }
+        </header>
+        @if (activePrompt(); as active) {
+          <div class="card-body">
+            <pre>{{ active.prompt }}</pre>
+            <div class="prompt-meta">
+              <span
+                >Status <strong>{{ active.status }}</strong></span
+              ><span
+                >Created <strong>{{ active.created_at | date: 'mediumDate' }}</strong></span
+              ><span
+                >Activated
+                <strong>{{
+                  active.activated_at ? (active.activated_at | date: 'mediumDate') : 'Baseline seed'
+                }}</strong></span
+              >
+            </div>
+          </div>
+        } @else {
+          <app-empty-state
+            title="No active prompt"
+            message="The backend should seed a baseline prompt at startup."
+            icon="optimiser"
+          />
+        }
+      </section>
+
+      <form class="card optimisation-form" [formGroup]="form" (ngSubmit)="startOptimisation()">
+        <header class="card-header">
+          <div>
+            <h2>Start optimisation</h2>
+            <p>A 202 job is returned immediately and polled in the background.</p>
+          </div>
+          <app-icon name="flask" />
+        </header>
+        <div class="card-body form-grid">
+          <div class="field field--full">
+            <label for="optimiser-advisor">Advisor ID</label
+            ><input id="optimiser-advisor" class="input" formControlName="advisorId" />
+          </div>
+          <div class="field">
+            <label for="max-variants">Candidate prompts</label
+            ><input
+              id="max-variants"
+              class="input"
+              type="number"
+              min="1"
+              max="5"
+              formControlName="maxVariants"
+            />
+          </div>
+          <div class="field">
+            <label for="benchmark-limit">Benchmark tasks</label
+            ><input
+              id="benchmark-limit"
+              class="input"
+              type="number"
+              min="1"
+              formControlName="benchmarkLimit"
+            />
+          </div>
+          <div class="field field--full">
+            <label for="repetitions">Repetitions per task</label
+            ><input
+              id="repetitions"
+              class="input"
+              type="number"
+              min="1"
+              max="5"
+              formControlName="repetitions"
+            /><small
+              >Repeated samples reduce the influence of one noisy latency or judge result.</small
+            >
+          </div>
+        </div>
+        <footer class="form-footer">
+          <div>
+            <strong
+              >{{ form.controls.maxVariants.value }} variants ×
+              {{ form.controls.benchmarkLimit.value }} tasks ×
+              {{ form.controls.repetitions.value }} repetitions</strong
+            ><span>Provider calls can take several minutes.</span>
+          </div>
+          <button class="button" type="submit" [disabled]="starting() || runningJobs().length > 0">
+            <app-icon name="optimiser" />{{
+              starting()
+                ? 'Queuing…'
+                : runningJobs().length
+                  ? 'Job already active'
+                  : 'Start optimisation'
+            }}
+          </button>
+        </footer>
+      </form>
+    </div>
+
+    @if (currentJob(); as job) {
+      <section class="card job-progress" [class.job-progress--failed]="job.status === 'failed'">
+        <div class="job-progress__top">
+          <div>
+            <span class="mono">{{ shortId(job.job_id) }}</span>
+            <h2>{{ labels[job.agent_type] }} optimisation</h2>
+            <p>Queued {{ job.created_at | date: 'medium' }}</p>
+          </div>
+          <app-status-badge [status]="job.status" />
+        </div>
+        <div class="progress-track"><span [style.width.%]="job.progress * 100"></span></div>
+        <div class="job-progress__footer">
+          <span>{{ job.progress | percent: '1.0-0' }} complete</span
+          ><span>{{
+            job.status === 'queued'
+              ? 'Waiting for a worker'
+              : job.status === 'running'
+                ? 'Benchmarking and evaluating candidates'
+                : job.status === 'completed'
+                  ? 'Results ready for review'
+                  : job.error_message || 'Job failed'
+          }}</span>
+        </div>
+      </section>
+    }
+
+    <div class="history-layout">
+      <aside class="card history-card">
+        <header class="card-header">
+          <div>
+            <h2>Optimisation history</h2>
+            <p>{{ agentJobs().length }} jobs for {{ labels[agent()] }}</p>
+          </div>
+        </header>
+        <div class="history-section">
+          <h3>Jobs</h3>
+          @if (agentJobs().length) {
+            @for (job of agentJobs().slice(0, 8); track job.job_id) {
+              <button
+                type="button"
+                class="history-row"
+                [class.history-row--active]="currentJob()?.job_id === job.job_id"
+                (click)="trackJob(job)"
+              >
+                <div>
+                  <strong class="mono">{{ shortId(job.job_id) }}</strong
+                  ><span>{{ job.created_at | date: 'MMM d, HH:mm' }}</span>
+                </div>
+                <app-status-badge [status]="job.status" />
+              </button>
+            }
+          } @else {
+            <p class="empty-copy">No jobs yet.</p>
+          }
+        </div>
+        <div class="history-section">
+          <h3>Saved results</h3>
+          @if (results().length) {
+            @for (result of results().slice(0, 8); track result.optimisation_id) {
+              <button
+                type="button"
+                class="history-row"
+                [class.history-row--active]="
+                  selectedResult()?.optimisation_id === result.optimisation_id
+                "
+                (click)="selectResult(result)"
+              >
+                <div>
+                  <strong>Result #{{ result.optimisation_id }}</strong
+                  ><span>{{ result.created_at | date: 'MMM d, HH:mm' }}</span>
+                </div>
+                <app-status-badge
+                  [status]="result.selected_versions.length ? 'selected' : 'rejected'"
+                  [label]="
+                    result.selected_versions.length
+                      ? result.selected_versions.length + ' selected'
+                      : 'No selection'
+                  "
+                />
+              </button>
+            }
+          } @else {
+            <p class="empty-copy">No completed results yet.</p>
+          }
+        </div>
+      </aside>
+
+      <main class="result-area">
+        @if (selectedResult(); as result) {
+          <section class="card reflection-card">
+            <header class="card-header">
+              <div>
+                <p class="result-kicker">Result #{{ result.optimisation_id }}</p>
+                <h2>Reflection and candidate comparison</h2>
+                <p>{{ result.created_at | date: 'medium' }}</p>
+              </div>
+              <app-status-badge
+                [status]="result.selected_versions.length ? 'selected' : 'rejected'"
+                [label]="
+                  result.selected_versions.length ? 'Candidate selected' : 'No candidate selected'
+                "
+              />
+            </header>
+            <div class="card-body">
+              <h3>Reflection on weak cases</h3>
+              <p class="reflection">{{ result.reflection }}</p>
+              <div class="selection-note">
+                <app-icon [name]="result.selected_versions.length ? 'check' : 'alert'" />
+                <div>
+                  <strong>Selection decision</strong>
+                  <p>{{ result.selection_note }}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div class="two-column result-grid">
+            <section class="card">
+              <header class="card-header">
+                <div>
+                  <h2>Pareto view</h2>
+                  <p>Upper-left means higher quality with lower latency.</p>
+                </div>
+              </header>
+              <div class="card-body chart-body">
+                <app-scatter-chart [points]="scatterPoints()" />
+              </div>
+            </section>
+            <section class="card">
+              <header class="card-header">
+                <div>
+                  <h2>Selection policy</h2>
+                  <p>Tolerances replace brittle strict dominance.</p>
+                </div>
+              </header>
+              <div class="card-body policy-list">
+                <div>
+                  <span>Minimum quality delta</span
+                  ><strong
+                    >+{{ result.selection_policy.minimum_quality_delta | number: '1.2-2' }}</strong
+                  >
+                </div>
+                <div>
+                  <span>Safety tolerance</span
+                  ><strong
+                    >−{{ result.selection_policy.safety_tolerance | number: '1.2-2' }}</strong
+                  >
+                </div>
+                <div>
+                  <span>Maximum latency</span
+                  ><strong
+                    >{{ result.selection_policy.latency_tolerance_ratio | percent: '1.0-0' }} of
+                    baseline</strong
+                  >
+                </div>
+                <div>
+                  <span>Maximum cost</span
+                  ><strong
+                    >{{ result.selection_policy.cost_tolerance_ratio | percent: '1.0-0' }} of
+                    baseline</strong
+                  >
+                </div>
+                <div>
+                  <span>Baseline samples</span
+                  ><strong>{{ result.baseline.metrics.sample_count }}</strong>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <section class="card comparison-card">
+            <header class="card-header">
+              <div>
+                <h2>Metrics comparison</h2>
+                <p>Means and standard deviations from repeated benchmark runs</p>
+              </div>
+            </header>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Version</th>
+                    <th>Status</th>
+                    <th>Quality</th>
+                    <th>Safety</th>
+                    <th>Latency</th>
+                    <th>Est. cost</th>
+                    <th>Samples</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="baseline-row">
+                    <td>
+                      <button
+                        type="button"
+                        class="version-button"
+                        (click)="selectedCandidate.set(null)"
+                      >
+                        {{ result.baseline.version }}
+                      </button>
+                    </td>
+                    <td><app-status-badge status="baseline" /></td>
+                    <td>
+                      {{ result.baseline.metrics.quality | number: '1.2-2' }} ±
+                      {{ result.baseline.metrics.quality_stddev | number: '1.2-2' }}
+                    </td>
+                    <td>
+                      {{ result.baseline.metrics.safety | number: '1.2-2' }} ±
+                      {{ result.baseline.metrics.safety_stddev | number: '1.2-2' }}
+                    </td>
+                    <td>{{ result.baseline.metrics.latency_ms | number: '1.0-0' }} ms</td>
+                    <td>
+                      {{
+                        result.baseline.metrics.estimated_cost
+                          | currency: 'USD' : 'symbol' : '1.5-5'
+                      }}
+                    </td>
+                    <td>{{ result.baseline.metrics.sample_count }}</td>
+                  </tr>
+                  @for (candidate of result.candidates; track candidate.version) {
+                    <tr [class.selected-row]="candidate.selected">
+                      <td>
+                        <button
+                          type="button"
+                          class="version-button"
+                          (click)="selectCandidate(candidate)"
+                        >
+                          {{ candidate.version }}
+                        </button>
+                      </td>
+                      <td>
+                        <app-status-badge
+                          [status]="candidate.selected ? 'selected' : candidate.status"
+                        />
+                      </td>
+                      <td>
+                        {{ candidate.metrics.quality | number: '1.2-2' }}
+                        <small
+                          [class.text-success]="
+                            delta(candidate.metrics.quality, result.baseline.metrics.quality) > 0
+                          "
+                          [class.text-danger]="
+                            delta(candidate.metrics.quality, result.baseline.metrics.quality) < 0
+                          "
+                          >({{
+                            delta(candidate.metrics.quality, result.baseline.metrics.quality) >= 0
+                              ? '+'
+                              : ''
+                          }}{{
+                            delta(candidate.metrics.quality, result.baseline.metrics.quality)
+                              | number: '1.2-2'
+                          }})</small
+                        >
+                      </td>
+                      <td>{{ candidate.metrics.safety | number: '1.2-2' }}</td>
+                      <td>
+                        {{ candidate.metrics.latency_ms | number: '1.0-0' }} ms
+                        <small
+                          >({{
+                            ratioDelta(
+                              candidate.metrics.latency_ms,
+                              result.baseline.metrics.latency_ms
+                            ) | percent: '1.0-0'
+                          }})</small
+                        >
+                      </td>
+                      <td>
+                        {{
+                          candidate.metrics.estimated_cost | currency: 'USD' : 'symbol' : '1.5-5'
+                        }}
+                      </td>
+                      <td>{{ candidate.metrics.sample_count }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="candidate-grid">
+            @for (candidate of result.candidates; track candidate.version) {
+              <article
+                class="card candidate-card"
+                [class.candidate-card--selected]="
+                  selectedCandidate()?.version === candidate.version
+                "
+                (click)="selectCandidate(candidate)"
+              >
+                <header>
+                  <div>
+                    <strong>{{ candidate.version }}</strong
+                    ><span>{{
+                      candidate.qualifies ? 'Passed policy gates' : 'Did not pass policy gates'
+                    }}</span>
+                  </div>
+                  <app-status-badge [status]="candidate.selected ? 'selected' : candidate.status" />
+                </header>
+                <p>{{ candidate.rationale }}</p>
+                <ul>
+                  @for (reason of candidate.reasons; track reason) {
+                    <li>{{ reason }}</li>
+                  }
+                </ul>
+                @if (candidate.status === 'selected') {
+                  <button
+                    class="button button--small"
+                    type="button"
+                    (click)="$event.stopPropagation(); activate(candidate)"
+                    [disabled]="
+                      version(candidate.version)?.is_active ||
+                      activatingVersion() === candidate.version
+                    "
+                  >
+                    <app-icon name="check" />{{
+                      version(candidate.version)?.is_active
+                        ? 'Currently active'
+                        : activatingVersion() === candidate.version
+                          ? 'Activating…'
+                          : 'Activate selected prompt'
+                    }}
+                  </button>
+                }
+              </article>
+            }
+          </section>
+
+          <section class="card prompt-compare">
+            <header class="card-header">
+              <div>
+                <h2>Prompt review</h2>
+                <p>Automatic selection recommends; explicit activation publishes.</p>
+              </div>
+              @if (selectedCandidate(); as candidate) {
+                <app-status-badge
+                  [status]="candidate.selected ? 'selected' : candidate.status"
+                  [label]="candidate.version"
+                />
+              } @else {
+                <app-status-badge status="baseline" [label]="result.baseline.version" />
+              }
+            </header>
+            <div class="prompt-columns">
+              <article>
+                <h3>Baseline · {{ result.baseline.version }}</h3>
+                <pre>{{ baselinePrompt()?.prompt || 'Prompt text unavailable.' }}</pre>
+              </article>
+              <article>
+                <h3>
+                  {{
+                    selectedCandidate()
+                      ? 'Candidate · ' + selectedCandidate()!.version
+                      : 'Select a candidate'
+                  }}
+                </h3>
+                <pre>{{
+                  candidatePrompt()?.prompt ||
+                    'Choose a candidate card or table row to compare its full prompt.'
+                }}</pre>
+              </article>
+            </div>
+            @if (selectedCandidate(); as candidate) {
+              <div class="prompt-details">
+                <app-json-viewer
+                  [data]="{
+                    rationale: candidate.rationale,
+                    reasons: candidate.reasons,
+                    run_ids: candidate.run_ids,
+                    metrics: candidate.metrics,
+                  }"
+                  title="Candidate evidence"
+                />
+              </div>
+            }
+          </section>
+        } @else {
+          <section class="card">
+            <app-empty-state
+              title="No optimisation result selected"
+              message="Start an optimisation job or select a completed result from the history."
+              icon="optimiser"
+            />
+          </section>
+        }
+      </main>
+    </div>
+
+    <section class="card version-library">
+      <header class="card-header">
+        <div>
+          <h2>Prompt version library</h2>
+          <p>Candidate versions remain inactive until selected and explicitly promoted.</p>
+        </div>
+        <span class="muted">{{ versions().length }} versions</span>
+      </header>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Version</th>
+              <th>Status</th>
+              <th>Parent</th>
+              <th>Quality</th>
+              <th>Safety</th>
+              <th>Created</th>
+              <th>Activation</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (prompt of versions(); track prompt.version) {
+              <tr>
+                <td>
+                  <span class="mono">{{ prompt.version }}</span>
+                </td>
+                <td>
+                  <app-status-badge
+                    [status]="prompt.is_active ? 'active' : prompt.status"
+                    [label]="prompt.is_active ? 'Active' : prompt.status"
+                  />
+                </td>
+                <td>{{ prompt.parent_version || '—' }}</td>
+                <td>
+                  {{
+                    prompt.average_scores ? (prompt.average_scores.quality | number: '1.2-2') : '—'
+                  }}
+                </td>
+                <td>
+                  {{
+                    prompt.average_scores ? (prompt.average_scores.safety | number: '1.2-2') : '—'
+                  }}
+                </td>
+                <td>{{ prompt.created_at | date: 'mediumDate' }}</td>
+                <td>
+                  @if (prompt.status === 'selected' && !prompt.is_active) {
+                    <button
+                      class="button button--small button--secondary"
+                      type="button"
+                      (click)="activatePrompt(prompt)"
+                      [disabled]="activatingVersion() === prompt.version"
+                    >
+                      Activate
+                    </button>
+                  } @else {
+                    <span class="muted">{{ prompt.is_active ? 'In use' : 'Not eligible' }}</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</div>
