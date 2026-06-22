@@ -50,10 +50,14 @@ def run_regression_suite(
     advisor_id: str = "demo-advisor",
     benchmark_limit: int | None = None,
     prompt_version: str | None = "baseline",
+    repetitions: int = 1,
 ) -> RegressionCheckResult:
     optimiser = GEPAInspiredOptimiser()
     optimiser.prompt_store.seed_baselines()
-    prompt, resolved_version = optimiser.prompt_store.get_prompt(agent_type, prompt_version)
+    prompt, resolved_version = optimiser.prompt_store.get_prompt(
+        agent_type,
+        prompt_version,
+    )
     tasks = list_tasks(agent_type)
     if benchmark_limit:
         tasks = tasks[:benchmark_limit]
@@ -62,7 +66,9 @@ def run_regression_suite(
         prompt=prompt,
         prompt_version=resolved_version,
         advisor_id=advisor_id,
+        owner_id=advisor_id,
         tasks=tasks,
+        repetitions=repetitions,
     )
     threshold_result = check_thresholds(
         agent_type=agent_type,
@@ -77,8 +83,10 @@ def run_regression_suite(
     )
 
 
-def _aggregate_regression_metrics(evaluations: list[EvaluationResult]) -> dict[str, float]:
-    aggregate = average_quality(evaluations)
+def _aggregate_regression_metrics(
+    evaluations: list[EvaluationResult],
+) -> dict[str, float]:
+    aggregate = average_quality(evaluations).model_dump()
     if not evaluations:
         return {
             **aggregate,
@@ -89,11 +97,13 @@ def _aggregate_regression_metrics(evaluations: list[EvaluationResult]) -> dict[s
     aggregate.update(
         {
             "format_correctness": round(
-                sum(item.format_correctness.score for item in evaluations) / len(evaluations),
+                sum(item.format_correctness.score for item in evaluations)
+                / len(evaluations),
                 3,
             ),
             "risk_awareness": round(
-                sum(item.risk_awareness.score for item in evaluations) / len(evaluations),
+                sum(item.risk_awareness.score for item in evaluations)
+                / len(evaluations),
                 3,
             ),
             "benchmark_expectations": round(
@@ -102,15 +112,26 @@ def _aggregate_regression_metrics(evaluations: list[EvaluationResult]) -> dict[s
                     for item in evaluations
                     if item.benchmark_expectations is not None
                 )
-                / max(1, sum(1 for item in evaluations if item.benchmark_expectations is not None)),
+                / max(
+                    1,
+                    sum(
+                        1
+                        for item in evaluations
+                        if item.benchmark_expectations is not None
+                    ),
+                ),
                 3,
             ),
         }
     )
-    return aggregate
+    return {key: float(value) for key, value in aggregate.items()}
 
 
-def _compare_metrics(*, metrics: dict[str, float], thresholds: dict[str, float]) -> list[str]:
+def _compare_metrics(
+    *,
+    metrics: dict[str, float],
+    thresholds: dict[str, float],
+) -> list[str]:
     failures: list[str] = []
     threshold_to_metric = {
         "min_quality": "quality",
@@ -120,17 +141,25 @@ def _compare_metrics(*, metrics: dict[str, float], thresholds: dict[str, float])
         "min_benchmark_expectations": "benchmark_expectations",
     }
     for threshold_name, metric_name in threshold_to_metric.items():
-        if threshold_name in thresholds and metrics[metric_name] < thresholds[threshold_name]:
+        if (
+            threshold_name in thresholds
+            and metrics[metric_name] < thresholds[threshold_name]
+        ):
             failures.append(
-                f"{metric_name}={metrics[metric_name]} is below {threshold_name}={thresholds[threshold_name]}"
+                f"{metric_name}={metrics[metric_name]} is below "
+                f"{threshold_name}={thresholds[threshold_name]}"
             )
     for threshold_name, metric_name in {
         "max_latency_ms": "latency_ms",
         "max_estimated_cost": "estimated_cost",
     }.items():
-        if threshold_name in thresholds and metrics[metric_name] > thresholds[threshold_name]:
+        if (
+            threshold_name in thresholds
+            and metrics[metric_name] > thresholds[threshold_name]
+        ):
             failures.append(
-                f"{metric_name}={metrics[metric_name]} is above {threshold_name}={thresholds[threshold_name]}"
+                f"{metric_name}={metrics[metric_name]} is above "
+                f"{threshold_name}={thresholds[threshold_name]}"
             )
     return failures
 
@@ -146,11 +175,18 @@ def _result_to_dict(result: RegressionCheckResult) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run benchmark regression checks for one agent.")
-    parser.add_argument("--agent", choices=[item.value for item in AgentType], required=True)
+    parser = argparse.ArgumentParser(
+        description="Run benchmark regression checks for one agent."
+    )
+    parser.add_argument(
+        "--agent",
+        choices=[item.value for item in AgentType],
+        required=True,
+    )
     parser.add_argument("--advisor-id", default="demo-advisor")
     parser.add_argument("--benchmark-limit", type=int, default=None)
     parser.add_argument("--prompt-version", default="baseline")
+    parser.add_argument("--repetitions", type=int, default=1)
     args = parser.parse_args()
 
     result = run_regression_suite(
@@ -158,6 +194,7 @@ def main() -> int:
         advisor_id=args.advisor_id,
         benchmark_limit=args.benchmark_limit,
         prompt_version=args.prompt_version,
+        repetitions=args.repetitions,
     )
     print(json.dumps(_result_to_dict(result), indent=2, sort_keys=True))
     return 0 if result.passed else 1
