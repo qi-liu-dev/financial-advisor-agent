@@ -14,3 +14,7 @@ optimizer.sqlite3
 dist/
 build/
 *.egg-info/
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/

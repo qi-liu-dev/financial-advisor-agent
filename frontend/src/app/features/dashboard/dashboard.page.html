@@ -1,0 +1,258 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <p class="page-header__eyebrow">AI operations overview</p>
+      <h1>Investment advisor agent performance</h1>
+      <p class="page-header__description">
+        Monitor structured-agent quality, safety, latency, prompt versions and optimisation activity
+        across the synthetic advisory workflow.
+      </p>
+    </div>
+    <div class="page-actions">
+      <button
+        class="button button--secondary"
+        type="button"
+        (click)="load()"
+        [disabled]="loading()"
+      >
+        <app-icon name="refresh" />Refresh
+      </button>
+      <a class="button" routerLink="/playground"><app-icon name="play" />Run an agent</a>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <app-loading-state label="Loading dashboard metrics…" />
+  } @else {
+    <section class="metrics-grid" aria-label="Key metrics">
+      <app-metric-card
+        label="Total agent runs"
+        [value]="totalRuns()"
+        [helper]="sampleLabel()"
+        icon="runs"
+        tone="blue"
+      />
+      <app-metric-card
+        label="Average quality"
+        [value]="averageQuality() ? (averageQuality() | number: '1.1-1') + ' / 5' : 'Not evaluated'"
+        [helper]="evaluatedTotal() + ' evaluated runs'"
+        icon="chart"
+        tone="teal"
+      />
+      <app-metric-card
+        label="Average safety"
+        [value]="averageSafety() ? (averageSafety() | number: '1.1-1') + ' / 5' : 'Not evaluated'"
+        [helper]="'Evaluation coverage ' + (evaluationCoverage() | percent: '1.0-0')"
+        icon="shield"
+        tone="violet"
+      />
+      <app-metric-card
+        label="Average latency"
+        [value]="averageLatency() ? (averageLatency() / 1000 | number: '1.2-2') + ' s' : '—'"
+        [helper]="'Tracked cost ' + (trackedCost() | currency: 'USD' : 'symbol' : '1.4-4')"
+        icon="clock"
+        tone="gold"
+      />
+    </section>
+
+    @if (health()?.llm?.status !== 'ok') {
+      <div class="callout callout--warning health-callout">
+        <strong>LLM provider is {{ health()?.llm?.status || 'unavailable' }}.</strong> Synthetic
+        data browsing and historical evaluation remain available, but new model calls may fail until
+        provider configuration is complete.
+      </div>
+    }
+
+    <div class="dashboard-grid section-gap">
+      <section class="card">
+        <header class="card-header">
+          <div>
+            <h2>Agent portfolio</h2>
+            <p>Quality and operational metrics by specialised agent</p>
+          </div>
+          <span class="sample-note">{{ sampleLabel() }}</span>
+        </header>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Agent</th>
+                <th>Runs</th>
+                <th>Quality</th>
+                <th>Safety</th>
+                <th>Avg latency</th>
+                <th>Active prompt</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of agentRows(); track row.agent) {
+                <tr>
+                  <td>
+                    <a [routerLink]="['/playground']" [queryParams]="{ agent: row.agent }">{{
+                      labels[row.agent]
+                    }}</a>
+                  </td>
+                  <td>{{ row.runs }}</td>
+                  <td>
+                    <span [class.muted]="!row.quality">{{
+                      row.quality ? (row.quality | number: '1.1-1') : '—'
+                    }}</span>
+                  </td>
+                  <td>
+                    <span [class.text-success]="row.safety >= 4" [class.muted]="!row.safety">{{
+                      row.safety ? (row.safety | number: '1.1-1') : '—'
+                    }}</span>
+                  </td>
+                  <td>
+                    {{
+                      row.averageLatency
+                        ? (row.averageLatency / 1000 | number: '1.2-2') + ' s'
+                        : '—'
+                    }}
+                  </td>
+                  <td>
+                    @if (row.activePrompt) {
+                      <app-status-badge
+                        [status]="row.activePrompt.is_active ? 'active' : row.activePrompt.status"
+                        [label]="row.activePrompt.version"
+                      />
+                    } @else {
+                      <span class="muted">Unavailable</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card system-health">
+        <header class="card-header">
+          <div>
+            <h2>System readiness</h2>
+            <p>Runtime and governance controls</p>
+          </div>
+          <app-status-badge [status]="health()?.status || 'error'" />
+        </header>
+        <div class="card-body health-list">
+          <div>
+            <span><app-icon name="server" />Database</span
+            ><app-status-badge [status]="health()?.database?.status || 'error'" />
+          </div>
+          <div>
+            <span><app-icon name="flask" />LLM provider</span
+            ><app-status-badge [status]="health()?.llm?.status || 'error'" />
+          </div>
+          <div>
+            <span><app-icon name="shield" />Field encryption</span
+            ><strong>{{ health()?.encryption_enabled ? 'Enabled' : 'Disabled' }}</strong>
+          </div>
+          <div>
+            <span><app-icon name="optimiser" />Active prompts</span
+            ><strong>{{ health()?.active_prompt_count ?? 0 }}</strong>
+          </div>
+          <div>
+            <span><app-icon name="server" />Migration version</span
+            ><strong>v{{ health()?.migration_version ?? 0 }}</strong>
+          </div>
+        </div>
+        @if (activeJobs().length) {
+          <div class="running-jobs">
+            <strong
+              >{{ activeJobs().length }} optimisation job{{
+                activeJobs().length === 1 ? '' : 's'
+              }}
+              active</strong
+            ><a routerLink="/optimiser">View progress <app-icon name="arrow-right" /></a>
+          </div>
+        }
+      </section>
+    </div>
+
+    <div class="dashboard-grid section-gap">
+      <section class="card">
+        <header class="card-header">
+          <div>
+            <h2>Recent runs</h2>
+            <p>Latest executions without exposing full client input in the list</p>
+          </div>
+          <a class="text-link" routerLink="/runs">View all <app-icon name="arrow-right" /></a>
+        </header>
+        @if (recentRuns().length) {
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Run</th>
+                  <th>Agent</th>
+                  <th>Prompt</th>
+                  <th>Latency</th>
+                  <th>Evaluation</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (run of recentRuns(); track run.run_id) {
+                  <tr>
+                    <td>
+                      <a
+                        class="mono"
+                        [routerLink]="['/runs']"
+                        [queryParams]="{ runId: run.run_id }"
+                        >{{ compactId(run) }}</a
+                      >
+                    </td>
+                    <td>{{ labels[run.agent_type] }}</td>
+                    <td>
+                      <span class="tag">{{ run.prompt_version }}</span>
+                    </td>
+                    <td>{{ run.latency_ms / 1000 | number: '1.2-2' }} s</td>
+                    <td>
+                      <app-status-badge [status]="run.has_evaluation ? 'evaluated' : 'pending'" />
+                    </td>
+                    <td class="nowrap">{{ run.created_at | date: 'MMM d, HH:mm' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <app-empty-state
+            title="No agent runs yet"
+            message="Start with a benchmark task or custom synthetic payload in the Agent Playground."
+            icon="playground"
+            ><a class="button button--small" routerLink="/playground"
+              >Open playground</a
+            ></app-empty-state
+          >
+        }
+      </section>
+
+      <section class="card prompt-list">
+        <header class="card-header">
+          <div>
+            <h2>Active prompts</h2>
+            <p>Explicitly promoted production defaults</p>
+          </div>
+          <a class="text-link" routerLink="/optimiser">Manage <app-icon name="arrow-right" /></a>
+        </header>
+        <div class="card-body">
+          @for (agent of agentTypes; track agent) {
+            <article>
+              <div>
+                <strong>{{ labels[agent] }}</strong
+                ><span>{{ activePrompts()[agent]?.created_at | date: 'MMM d, y' }}</span>
+              </div>
+              @if (activePrompts()[agent]; as prompt) {
+                <app-status-badge [status]="prompt.status" [label]="prompt.version" />
+              } @else {
+                <app-status-badge status="error" label="Unavailable" />
+              }
+            </article>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</div>

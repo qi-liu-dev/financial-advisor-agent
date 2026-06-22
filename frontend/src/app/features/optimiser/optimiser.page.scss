@@ -1,0 +1,364 @@
+.agent-select {
+  min-width: 12rem;
+}
+.top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.75fr);
+  gap: 1rem;
+}
+.active-prompt-card pre,
+.prompt-columns pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--code-text);
+  background: var(--code-bg);
+  border-radius: 0.7rem;
+  padding: 1rem;
+  max-height: 17rem;
+  overflow: auto;
+}
+.prompt-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.2rem;
+  margin-top: 0.8rem;
+  color: var(--text-subtle);
+  font-size: 0.66rem;
+}
+.prompt-meta strong {
+  color: var(--text-muted);
+}
+.optimisation-form > .card-header app-icon {
+  color: var(--teal);
+}
+.form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+.form-footer strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.74rem;
+}
+.form-footer span {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--text-subtle);
+  font-size: 0.66rem;
+}
+.job-progress {
+  margin-top: 1rem;
+  padding: 1rem 1.2rem;
+}
+.job-progress--failed {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+}
+.job-progress__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.job-progress__top h2 {
+  margin: 0.2rem 0;
+  color: var(--text);
+  font-size: 0.86rem;
+}
+.job-progress__top p {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: 0.68rem;
+}
+.progress-track {
+  height: 0.5rem;
+  margin: 0.85rem 0 0.5rem;
+  border-radius: 999px;
+  background: var(--neutral-soft);
+  overflow: hidden;
+}
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--teal), var(--blue));
+  transition: width 0.4s;
+}
+.job-progress__footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text-subtle);
+  font-size: 0.67rem;
+}
+.history-layout {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.52fr) minmax(0, 1.65fr);
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: start;
+}
+.history-card {
+  position: sticky;
+  top: 5.25rem;
+}
+.history-section {
+  padding: 0.8rem;
+}
+.history-section + .history-section {
+  border-top: 1px solid var(--border);
+}
+.history-section h3 {
+  margin: 0.1rem 0.35rem 0.45rem;
+  color: var(--text-subtle);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.65rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 0.62rem;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.history-row:hover {
+  background: var(--surface-hover);
+}
+.history-row--active {
+  border-color: color-mix(in srgb, var(--teal) 30%, var(--border));
+  background: var(--teal-soft);
+}
+.history-row strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.7rem;
+}
+.history-row span {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--text-subtle);
+  font-size: 0.62rem;
+}
+.empty-copy {
+  margin: 0.5rem;
+  color: var(--text-subtle);
+  font-size: 0.7rem;
+}
+.result-area {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.result-kicker {
+  margin: 0 0 0.25rem !important;
+  color: var(--teal) !important;
+  font-size: 0.65rem !important;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.reflection-card h3 {
+  margin: 0 0 0.5rem;
+  color: var(--text);
+  font-size: 0.8rem;
+}
+.reflection {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+.selection-note {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: var(--teal-soft);
+}
+.selection-note app-icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--teal);
+}
+.selection-note strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.74rem;
+}
+.selection-note p {
+  margin: 0.2rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+.result-grid {
+  margin: 0;
+}
+.chart-body {
+  padding: 0.7rem;
+}
+.policy-list {
+  display: grid;
+  gap: 0.2rem;
+}
+.policy-list > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+.policy-list > div:last-child {
+  border-bottom: 0;
+}
+.policy-list strong {
+  color: var(--text);
+  font-size: 0.72rem;
+}
+.version-button {
+  border: 0;
+  background: transparent;
+  color: var(--teal);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.baseline-row {
+  background: var(--surface-raised);
+}
+.selected-row {
+  background: var(--success-soft);
+}
+.candidate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.candidate-card {
+  padding: 1rem;
+  cursor: pointer;
+}
+.candidate-card--selected {
+  border-color: color-mix(in srgb, var(--teal) 45%, var(--border));
+  box-shadow: 0 0 0 2px var(--teal-soft);
+}
+.candidate-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+.candidate-card strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.76rem;
+}
+.candidate-card header span {
+  display: block;
+  margin-top: 0.17rem;
+  color: var(--text-subtle);
+  font-size: 0.64rem;
+}
+.candidate-card > p {
+  margin: 0.75rem 0;
+  color: var(--text-muted);
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+.candidate-card ul {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0 0 0.8rem;
+  padding-left: 1rem;
+  color: var(--text-subtle);
+  font-size: 0.67rem;
+}
+.prompt-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+.prompt-columns h3 {
+  margin: 0 0 0.55rem;
+  color: var(--text);
+  font-size: 0.74rem;
+}
+.prompt-columns pre {
+  height: 20rem;
+  max-height: 20rem;
+}
+.prompt-details {
+  padding: 0 1rem 1rem;
+}
+.version-library {
+  margin-top: 1rem;
+}
+@media (max-width: 1200px) {
+  .top-grid,
+  .history-layout {
+    grid-template-columns: 1fr;
+  }
+  .history-card {
+    position: static;
+  }
+  .history-card {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .history-card > .card-header {
+    grid-column: 1/-1;
+  }
+  .history-section + .history-section {
+    border-top: 0;
+    border-left: 1px solid var(--border);
+  }
+}
+@media (max-width: 780px) {
+  .form-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .form-footer .button {
+    width: 100%;
+  }
+  .candidate-grid,
+  .prompt-columns {
+    grid-template-columns: 1fr;
+  }
+  .prompt-columns pre {
+    height: auto;
+    max-height: 22rem;
+  }
+  .history-card {
+    display: block;
+  }
+  .history-section + .history-section {
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+  .job-progress__footer {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}

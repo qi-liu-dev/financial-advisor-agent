@@ -1,0 +1,325 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <p class="page-header__eyebrow">Personalisation and synthetic workspace</p>
+      <h1>Advisor preferences</h1>
+      <p class="page-header__description">
+        Manage persistent presentation preferences, optional development authentication and browse
+        the synthetic client datasets used by the dashboard.
+      </p>
+    </div>
+    <div class="page-actions">
+      <a class="button" routerLink="/playground"><app-icon name="play" />Open playground</a>
+    </div>
+  </header>
+
+  <div class="preferences-grid">
+    <section class="card">
+      <header class="card-header">
+        <div>
+          <h2>Advisor memory</h2>
+          <p>Stored defaults for agent presentation and risk emphasis</p>
+        </div>
+        @if (memory(); as stored) {
+          <app-status-badge status="ok" label="Saved" />
+        }
+      </header>
+      @if (loadingMemory()) {
+        <app-loading-state label="Loading advisor memory…" />
+      } @else {
+        <form [formGroup]="preferencesForm" (ngSubmit)="savePreferences()">
+          <div class="card-body form-grid">
+            <div class="field field--full">
+              <div class="field-heading">
+                <label for="memory-advisor">Advisor ID</label
+                ><button class="text-button" type="button" (click)="loadMemory()">
+                  Load memory
+                </button>
+              </div>
+              <input
+                id="memory-advisor"
+                class="input"
+                formControlName="advisorId"
+                autocomplete="off"
+              />
+              @if (
+                preferencesForm.controls.advisorId.touched &&
+                preferencesForm.controls.advisorId.invalid
+              ) {
+                <small class="text-danger">Advisor ID is required.</small>
+              }
+            </div>
+            <div class="field">
+              <label for="memory-summary-style">Summary style</label
+              ><select id="memory-summary-style" class="select" formControlName="summaryStyle">
+                <option value="brief">Brief</option>
+                <option value="balanced">Balanced</option>
+                <option value="narrative">Narrative</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="memory-detail-level">Detail level</label
+              ><select id="memory-detail-level" class="select" formControlName="detailLevel">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="memory-risk-focus">Risk focus</label
+              ><select id="memory-risk-focus" class="select" formControlName="riskFocus">
+                <option value="low">Low</option>
+                <option value="balanced">Balanced</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="memory-language">Preferred language</label
+              ><input
+                id="memory-language"
+                class="input"
+                formControlName="preferredLanguage"
+                placeholder="en, nl, zh…"
+              /><small>A language code or plain language name accepted by the prompt.</small>
+            </div>
+          </div>
+          <div class="memory-preview">
+            <span>Example behaviour</span>
+            <p>
+              Produce a <strong>{{ preferencesForm.controls.summaryStyle.value }}</strong> response
+              with <strong>{{ preferencesForm.controls.detailLevel.value }}</strong> detail,
+              <strong>{{ preferencesForm.controls.riskFocus.value }}</strong> risk emphasis, in
+              <strong>{{ preferencesForm.controls.preferredLanguage.value || 'en' }}</strong
+              >.
+            </p>
+          </div>
+          <footer class="form-footer">
+            <div>
+              @if (memory(); as stored) {
+                <span>Updated {{ stored.updated_at | date: 'medium' }}</span>
+              } @else {
+                <span>No stored memory loaded.</span>
+              }
+            </div>
+            <div>
+              <button
+                class="button button--danger button--small"
+                type="button"
+                (click)="deletePreferences()"
+                [disabled]="deleting()"
+              >
+                <app-icon name="trash" />Delete</button
+              ><button class="button" type="submit" [disabled]="saving()">
+                <app-icon name="check" />{{ saving() ? 'Saving…' : 'Save preferences' }}
+              </button>
+            </div>
+          </footer>
+        </form>
+      }
+    </section>
+
+    <section class="card connection-card">
+      <header class="card-header">
+        <div>
+          <h2>Connection and identity</h2>
+          <p>Optional local API-key mode or Azure platform authentication</p>
+        </div>
+        <app-icon name="shield" />
+      </header>
+      <form class="card-body" [formGroup]="connectionForm" (ngSubmit)="saveConnection()">
+        <div class="callout callout--warning">
+          Only use this field for local development with <code>AUTH_MODE=api_key</code>. The value
+          is stored in sessionStorage for the current browser tab, never in source code.
+        </div>
+        <div class="field api-key-field">
+          <label for="api-key">Development API key</label
+          ><input
+            id="api-key"
+            class="input"
+            type="password"
+            formControlName="apiKey"
+            autocomplete="off"
+            placeholder="Leave empty when auth is disabled or Azure-managed"
+          />
+        </div>
+        <div class="connection-actions">
+          <button class="button button--secondary" type="submit">
+            {{ session.apiKey() ? 'Update credential' : 'Store for this tab' }}
+          </button>
+          @if (session.apiKey()) {
+            <button
+              class="button button--ghost"
+              type="button"
+              (click)="connectionForm.controls.apiKey.setValue(''); saveConnection()"
+            >
+              Clear
+            </button>
+          }
+        </div>
+        <div class="azure-links">
+          <span>Azure Easy Auth</span
+          ><a href="/.auth/login/aad">Sign in with Microsoft <app-icon name="external" /></a
+          ><a href="/.auth/logout">Sign out <app-icon name="external" /></a>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <section class="card workspace-browser">
+    <header class="card-header">
+      <div>
+        <h2>Synthetic client workspace</h2>
+        <p>Browse the otherwise-unused mock client, portfolio, meeting and proposal datasets.</p>
+      </div>
+      <app-status-badge status="ok" label="Synthetic only" />
+    </header>
+    <div class="workspace-toolbar">
+      <div class="field">
+        <label for="client-selector">Client</label
+        ><select
+          id="client-selector"
+          class="select"
+          [value]="selectedClientId()"
+          (change)="chooseClient($any($event.target).value)"
+        >
+          @for (client of clients(); track client.client_id) {
+            <option [value]="client.client_id">
+              {{ client.name || client.client_id }} · {{ client.risk_tolerance }} risk
+            </option>
+          }
+        </select>
+      </div>
+      @if (workspace(); as current) {
+        <div class="workspace-actions">
+          <a
+            class="button button--small button--secondary"
+            routerLink="/playground"
+            [queryParams]="{ clientId: current.client.client_id, agent: 'client_summary' }"
+            >Client summary</a
+          ><a
+            class="button button--small button--secondary"
+            routerLink="/playground"
+            [queryParams]="{ clientId: current.client.client_id, agent: 'meeting_notes' }"
+            [class.disabled]="!current.meetings.length"
+            >Meeting notes</a
+          ><a
+            class="button button--small"
+            routerLink="/playground"
+            [queryParams]="{ clientId: current.client.client_id, agent: 'investment_review' }"
+            [class.disabled]="!current.investment_proposals.length"
+            >Review proposal</a
+          >
+        </div>
+      }
+    </div>
+
+    @if (loadingWorkspace()) {
+      <app-loading-state label="Assembling synthetic client workspace…" />
+    } @else if (workspace(); as current) {
+      <div class="workspace-content">
+        <article class="profile-card">
+          <div class="client-avatar">
+            {{ (current.client.name || current.client.client_id).slice(0, 2).toUpperCase() }}
+          </div>
+          <div>
+            <p class="profile-kicker">{{ current.client.client_id }}</p>
+            <h3>{{ current.client.name || 'Synthetic client' }}</h3>
+            <p>
+              {{ current.client.household || 'Household not provided' }} ·
+              {{ current.client.age || '—' }} years · {{ current.client.risk_tolerance }} risk
+            </p>
+          </div>
+          <div class="profile-stat">
+            <span>Horizon</span
+            ><strong>{{ current.client.investment_horizon_years ?? '—' }} years</strong>
+          </div>
+        </article>
+        <div class="workspace-grid">
+          <section>
+            <h3>Goals and constraints</h3>
+            <div class="workspace-list">
+              <strong>Goals</strong>
+              @for (goal of current.client.goals; track goal) {
+                <p><app-icon name="check" />{{ goal }}</p>
+              }
+              <strong>Constraints</strong>
+              @for (constraint of current.client.constraints; track constraint) {
+                <p><app-icon name="alert" />{{ constraint }}</p>
+              }
+            </div>
+          </section>
+          <section>
+            <h3>Portfolio{{ current.portfolios.length === 1 ? '' : 's' }}</h3>
+            @for (portfolio of current.portfolios; track portfolio.portfolio_id) {
+              <article class="portfolio">
+                <div class="portfolio__top">
+                  <div>
+                    <strong>{{ portfolio.portfolio_id }}</strong
+                    ><span>{{ portfolio.currency || 'EUR' }}</span>
+                  </div>
+                  <b>{{
+                    portfolio.total_value != null
+                      ? (portfolio.total_value
+                        | currency: portfolio.currency || 'EUR' : 'symbol' : '1.0-0')
+                      : 'Value unavailable'
+                  }}</b>
+                </div>
+                <div class="allocation">
+                  @for (entry of allocationEntries(portfolio.asset_allocation); track entry.name) {
+                    <div>
+                      <span>{{ entry.name }}</span>
+                      <div><i [style.width.%]="entry.value"></i></div>
+                      <strong>{{ entry.value | number: '1.0-1' }}%</strong>
+                    </div>
+                  }
+                </div>
+                @for (note of portfolio.risk_notes; track note) {
+                  <p class="risk-note"><app-icon name="alert" />{{ note }}</p>
+                }
+              </article>
+            }
+          </section>
+          <section>
+            <h3>Recent meetings</h3>
+            @if (current.meetings.length) {
+              @for (meeting of current.meetings; track meeting.meeting_id) {
+                <article class="workspace-item">
+                  <div>
+                    <strong>{{ meeting.meeting_id }}</strong
+                    ><span>{{ meeting.date | date: 'mediumDate' }}</span>
+                  </div>
+                  <p>{{ meeting.transcript.length }} transcript turns</p>
+                </article>
+              }
+            } @else {
+              <p class="muted">No synthetic meetings for this client.</p>
+            }
+          </section>
+          <section>
+            <h3>Investment proposals</h3>
+            @if (current.investment_proposals.length) {
+              @for (proposal of current.investment_proposals; track proposal.proposal_id) {
+                <article class="workspace-item">
+                  <div>
+                    <strong>{{ proposal.title }}</strong
+                    ><span>{{ proposal.proposal_id }}</span>
+                  </div>
+                  <p>{{ proposal.proposal_summary }}</p>
+                </article>
+              }
+            } @else {
+              <p class="muted">No synthetic proposals for this client.</p>
+            }
+          </section>
+        </div>
+        <app-json-viewer [data]="current" title="Complete synthetic workspace JSON" />
+      </div>
+    } @else {
+      <app-empty-state
+        title="No client selected"
+        message="Choose a synthetic client to assemble its related workspace."
+        icon="preferences"
+      />
+    }
+  </section>
+</div>

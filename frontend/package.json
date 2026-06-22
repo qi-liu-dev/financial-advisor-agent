@@ -1,0 +1,37 @@
+{
+  "name": "financial-advisor-agent-dashboard",
+  "version": "1.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve --proxy-config proxy.conf.json",
+    "build": "ng build",
+    "build:dev": "ng build --configuration development",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "test:ci": "ng test --watch=false",
+    "format": "prettier --write \"src/**/*.{ts,html,scss}\" \"*.{json,md}\" \"public/**/*.json\"",
+    "format:check": "prettier --check \"src/**/*.{ts,html,scss}\" \"*.{json,md}\" \"public/**/*.json\"",
+    "verify": "npm run test:ci && npm run build && npm run format:check"
+  },
+  "private": true,
+  "packageManager": "npm@10.9.2",
+  "dependencies": {
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.2.16",
+    "@angular/cli": "^21.2.16",
+    "@angular/compiler-cli": "^21.2.0",
+    "jsdom": "^28.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "~5.9.2",
+    "vitest": "^4.0.8"
+  }
+}
