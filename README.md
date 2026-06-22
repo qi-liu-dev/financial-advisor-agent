@@ -1,12 +1,12 @@
 # Financial Advisor Agent Optimizer
 
-A FastAPI-based prototype for evaluating and improving LLM agents in mock wealth-management workflows. It demonstrates multi-agent patterns, OpenAI API usage, structured outputs, trace logging, evaluation loops, advisor memory, and GEPA-inspired prompt optimisation.
+A FastAPI-based prototype for evaluating and improving LLM agents in mock wealth-management workflows. It demonstrates multi-agent patterns, public OpenAI and Azure OpenAI integration, structured outputs, trace logging, evaluation loops, advisor memory, and GEPA-inspired prompt optimisation.
  
 The idea is: a financial advisor has client information, meeting notes, portfolio summaries, and investment proposal drafts. The system uses several specialised agents to produce structured, reviewable outputs, and also evaluates the agent outputs, and tries to improve prompts over time.
 
 ## Core Features
 
-- Three OpenAI-backed agents: client summaries, meeting notes, and investment proposal review.
+- Three provider-neutral LLM agents: client summaries, meeting notes, and investment proposal review.
 - Pydantic structured JSON outputs with fields such as `summary`, `key_points`, `risks`, `next_actions`, `confidence`, and `citations_to_input`.
 - SQLite trace logging for every agent run.
 - Rule-based and LLM-as-judge evaluation.
@@ -23,7 +23,8 @@ The idea is: a financial advisor has client information, meeting notes, portfoli
 
 ```text
 backend/
-  agents/          OpenAI-backed advisory agents
+  agents/          Provider-neutral advisory agents
+  llm/             OpenAI/Azure client, authentication, retries, timeouts, IDs, and logging
   data/            Synthetic benchmark data, mock input data, and regression thresholds
   evaluation/      Rule-based checks, LLM-as-judge evaluation, and regression runner
   memory/          Advisor preference storage
@@ -42,18 +43,45 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Edit `.env` and set:
+Copy the environment template:
 
 ```bash
-OPENAI_API_KEY=sk-your-key-here
+cp .env.example .env
 ```
 
-The code reads the key from `OPENAI_API_KEY` only. No secrets are hardcoded.
+For public OpenAI, activate the `LLM_PROVIDER=openai` section and set
+`OPENAI_API_KEY`. For Azure OpenAI, use either API-key authentication or
+`LLM_AUTH_MODE=managed_identity`. On Azure, `OPENAI_MODEL` and
+`OPENAI_JUDGE_MODEL` are deployment names. See
+[`LLM_CLIENT_REFACTOR.md`](LLM_CLIENT_REFACTOR.md) for all configurations.
+
+No secrets are hardcoded or committed.
+
+
+## Unified LLM Gateway
+
+All provider calls go through `backend/llm/client.py`. It owns provider and
+authentication selection, structured JSON calls, Pydantic validation, HTTP
+timeouts, SDK retry policy, request correlation IDs, and metadata-only logging.
+The four business modules no longer instantiate `OpenAI()` directly.
+
+A successful `POST /run-agent` now returns both:
+
+```json
+{
+  "provider_request_id": "provider-generated-id",
+  "client_request_id": "application-generated-uuid"
+}
+```
+
+The same IDs are persisted in `agent_runs`. Existing SQLite databases are
+migrated automatically on startup. Prompts, financial inputs, and model outputs
+are not written to application logs.
 
 ## Run The API
 
 ```bash
-uvicorn backend.main:app --reload
+uvicorn backend.main:app --reload --env-file .env
 ```
 
 Open:
@@ -91,7 +119,7 @@ python -m backend.evaluation.regression --agent meeting_notes --benchmark-limit 
 python -m backend.evaluation.regression --agent investment_review --benchmark-limit 1
 ```
 
-These commands call the OpenAI API, so they require `OPENAI_API_KEY`. For quick local verification without OpenAI calls, use `pytest`.
+These commands call the selected LLM provider, so they require a valid public OpenAI or Azure OpenAI configuration. For quick local verification without provider calls, use `pytest`.
 
 ## Example Workflow
 
@@ -213,5 +241,5 @@ The exact numbers depend on the model, benchmark subset, and current prompt vari
 ## Future Improvements
 
 - Add a small frontend dashboard for traces, scores, and prompt comparisons.
-- Store OpenAI request ids and richer tracing metadata.
-- Add model comparison across different OpenAI models.
+- Add model comparison across public OpenAI and Azure OpenAI deployments.
+- Move long-running prompt optimisation into an asynchronous job worker.

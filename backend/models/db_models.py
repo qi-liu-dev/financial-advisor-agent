@@ -18,4 +18,6 @@ class AgentRunRecord:
     token_usage: dict[str, Any] | None
     evaluation_scores: dict[str, Any] | None
     advisor_preferences: dict[str, Any] | None
+    provider_request_id: str | None
+    client_request_id: str | None
     timestamp: datetime

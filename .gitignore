@@ -5,7 +5,8 @@ __pycache__/
 .ruff_cache/
 .venv/
 venv/
-.env
+.env*
+!.env.example
 *.sqlite
 *.sqlite3
 optimizer.sqlite3

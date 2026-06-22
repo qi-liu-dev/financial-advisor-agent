@@ -86,6 +86,8 @@ class RunAgentResponse(BaseModel):
     output: dict[str, Any]
     latency_ms: float
     token_usage: dict[str, Any] | None = None
+    provider_request_id: str | None = None
+    client_request_id: str | None = None
 
 
 class MemoryUpdateRequest(BaseModel):

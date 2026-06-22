@@ -28,16 +28,20 @@ class TraceLogger:
         token_usage: dict[str, Any] | None,
         evaluation_scores: dict[str, Any] | None,
         advisor_preferences: dict[str, Any] | None,
+        provider_request_id: str | None = None,
+        client_request_id: str | None = None,
     ) -> None:
         timestamp = datetime.now(timezone.utc).isoformat()
         with get_connection() as conn:
             conn.execute(
                 """
                 INSERT INTO agent_runs (
-                    run_id, task_type, prompt_version, model_name, input_hash, full_input,
-                    output, latency_ms, token_usage, evaluation_scores, advisor_preferences, timestamp
+                    run_id, task_type, prompt_version, model_name, input_hash,
+                    full_input, output, latency_ms, token_usage,
+                    evaluation_scores, advisor_preferences, provider_request_id,
+                    client_request_id, timestamp
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     run_id,
@@ -49,8 +53,14 @@ class TraceLogger:
                     json.dumps(output, sort_keys=True),
                     latency_ms,
                     json.dumps(token_usage, sort_keys=True) if token_usage else None,
-                    json.dumps(evaluation_scores, sort_keys=True) if evaluation_scores else None,
-                    json.dumps(advisor_preferences, sort_keys=True) if advisor_preferences else None,
+                    json.dumps(evaluation_scores, sort_keys=True)
+                    if evaluation_scores
+                    else None,
+                    json.dumps(advisor_preferences, sort_keys=True)
+                    if advisor_preferences
+                    else None,
+                    provider_request_id,
+                    client_request_id,
                     timestamp,
                 ),
             )
@@ -64,7 +74,10 @@ class TraceLogger:
 
     def get_run(self, run_id: str) -> AgentRunRecord | None:
         with get_connection() as conn:
-            row = conn.execute("SELECT * FROM agent_runs WHERE run_id = ?", (run_id,)).fetchone()
+            row = conn.execute(
+                "SELECT * FROM agent_runs WHERE run_id = ?",
+                (run_id,),
+            ).fetchone()
         return self._row_to_record(row) if row else None
 
     def list_runs(self, limit: int = 50) -> list[AgentRunRecord]:
@@ -86,7 +99,17 @@ class TraceLogger:
             output=json.loads(row["output"]),
             latency_ms=float(row["latency_ms"]),
             token_usage=json.loads(row["token_usage"]) if row["token_usage"] else None,
-            evaluation_scores=json.loads(row["evaluation_scores"]) if row["evaluation_scores"] else None,
-            advisor_preferences=json.loads(row["advisor_preferences"]) if row["advisor_preferences"] else None,
+            evaluation_scores=(
+                json.loads(row["evaluation_scores"])
+                if row["evaluation_scores"]
+                else None
+            ),
+            advisor_preferences=(
+                json.loads(row["advisor_preferences"])
+                if row["advisor_preferences"]
+                else None
+            ),
+            provider_request_id=row["provider_request_id"],
+            client_request_id=row["client_request_id"],
             timestamp=datetime.fromisoformat(row["timestamp"]),
         )

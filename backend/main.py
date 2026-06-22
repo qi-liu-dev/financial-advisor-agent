@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from contextlib import asynccontextmanager
 from typing import Any
 from uuid import uuid4
@@ -12,6 +13,13 @@ from backend.database import init_db
 from backend.evaluation.llm_judge import LLMJudgeEvaluator
 from backend.evaluation.metrics import combine_evaluations
 from backend.evaluation.rule_based import RuleBasedEvaluator
+from backend.llm import (
+    LLMConfigurationError,
+    LLMError,
+    LLMRequestError,
+    LLMResponseError,
+    close_llm_client,
+)
 from backend.memory.advisor_memory import AdvisorMemoryRepository
 from backend.models.schemas import (
     AgentType,
@@ -25,16 +33,22 @@ from backend.optimisation.prompt_store import PromptStore
 from backend.traces.trace_logger import TraceLogger
 
 
+logger = logging.getLogger("financial_advisor.api")
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
     PromptStore().seed_baselines()
-    yield
+    try:
+        yield
+    finally:
+        close_llm_client()
 
 
 app = FastAPI(
     title="Financial Advisor Agent Optimizer",
-    version="0.1.0",
+    version="0.2.0",
     description=(
         "API-first prototype for evaluating and GEPA-inspired prompt optimisation of "
         "mock financial-advisory LLM agents."
@@ -64,7 +78,10 @@ def run_agent(request: RunAgentRequest) -> RunAgentResponse:
     payload = _resolve_payload(request)
     preferences = request.preferences or memory_repo.get_preferences(request.advisor_id)
     try:
-        prompt, prompt_version = prompt_store.get_prompt(request.agent_type, request.prompt_version)
+        prompt, prompt_version = prompt_store.get_prompt(
+            request.agent_type,
+            request.prompt_version,
+        )
         agent = get_agent(request.agent_type)
         result = agent.run(
             payload=payload,
@@ -72,8 +89,21 @@ def run_agent(request: RunAgentRequest) -> RunAgentResponse:
             prompt=prompt,
             prompt_version=prompt_version,
         )
+    except LLMError as exc:
+        raise _llm_http_exception(exc) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        logger.exception(
+            "run_agent_failed agent_type=%s prompt_version=%s",
+            request.agent_type.value,
+            request.prompt_version or "active",
+        )
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "internal_error",
+                "message": "The agent run failed unexpectedly.",
+            },
+        ) from exc
 
     run_id = str(uuid4())
     full_input = {
@@ -93,6 +123,8 @@ def run_agent(request: RunAgentRequest) -> RunAgentResponse:
         token_usage=result.token_usage,
         evaluation_scores=None,
         advisor_preferences=preferences.model_dump(),
+        provider_request_id=result.provider_request_id,
+        client_request_id=result.client_request_id,
     )
     return RunAgentResponse(
         run_id=run_id,
@@ -101,6 +133,8 @@ def run_agent(request: RunAgentRequest) -> RunAgentResponse:
         output=result.output.model_dump(),
         latency_ms=result.latency_ms,
         token_usage=result.token_usage,
+        provider_request_id=result.provider_request_id,
+        client_request_id=result.client_request_id,
     )
 
 
@@ -110,18 +144,31 @@ def evaluate_run(run_id: str) -> dict[str, Any]:
     if record is None:
         raise HTTPException(status_code=404, detail=f"Run not found: {run_id}")
 
-    rule_scores = rule_evaluator.evaluate(record.output)
-    judge_scores = judge_evaluator.evaluate(
-        agent_type=record.task_type,
-        full_input=record.full_input,
-        output=record.output,
-    )
-    evaluation = combine_evaluations(
-        rule_scores=rule_scores,
-        judge_scores=judge_scores,
-        latency_ms=record.latency_ms,
-        token_usage=record.token_usage,
-    )
+    try:
+        rule_scores = rule_evaluator.evaluate(record.output)
+        judge_scores = judge_evaluator.evaluate(
+            agent_type=record.task_type,
+            full_input=record.full_input,
+            output=record.output,
+        )
+        evaluation = combine_evaluations(
+            rule_scores=rule_scores,
+            judge_scores=judge_scores,
+            latency_ms=record.latency_ms,
+            token_usage=record.token_usage,
+        )
+    except LLMError as exc:
+        raise _llm_http_exception(exc) from exc
+    except Exception as exc:
+        logger.exception("evaluate_run_failed run_id=%s", run_id)
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "internal_error",
+                "message": "The run evaluation failed unexpectedly.",
+            },
+        ) from exc
+
     trace_logger.update_evaluation(run_id, evaluation.model_dump())
     return evaluation.model_dump()
 
@@ -135,8 +182,17 @@ def optimise(agent_type: AgentType, request: OptimisationRequest) -> dict[str, A
             max_variants=request.max_variants,
             benchmark_limit=request.benchmark_limit,
         )
+    except LLMError as exc:
+        raise _llm_http_exception(exc) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        logger.exception("optimisation_failed agent_type=%s", agent_type.value)
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "internal_error",
+                "message": "Prompt optimisation failed unexpectedly.",
+            },
+        ) from exc
 
 
 @app.get("/runs")
@@ -193,5 +249,49 @@ def _record_to_dict(record: Any) -> dict[str, Any]:
         "token_usage": record.token_usage,
         "evaluation_scores": record.evaluation_scores,
         "advisor_preferences": record.advisor_preferences,
+        "provider_request_id": record.provider_request_id,
+        "client_request_id": record.client_request_id,
         "timestamp": record.timestamp.isoformat(),
     }
+
+
+def _llm_http_exception(error: LLMError) -> HTTPException:
+    if isinstance(error, LLMConfigurationError):
+        return HTTPException(
+            status_code=503,
+            detail={
+                "code": "llm_configuration_error",
+                "message": "The LLM provider is not configured correctly.",
+            },
+        )
+
+    if isinstance(error, LLMRequestError):
+        return HTTPException(
+            status_code=502,
+            detail={
+                "code": "llm_upstream_error",
+                "message": "The LLM provider request failed.",
+                "client_request_id": error.client_request_id,
+                "provider_request_id": error.provider_request_id,
+                "upstream_status_code": error.status_code,
+            },
+        )
+
+    if isinstance(error, LLMResponseError):
+        return HTTPException(
+            status_code=502,
+            detail={
+                "code": "llm_invalid_response",
+                "message": "The LLM provider returned an invalid structured response.",
+                "client_request_id": error.client_request_id,
+                "provider_request_id": error.provider_request_id,
+            },
+        )
+
+    return HTTPException(
+        status_code=502,
+        detail={
+            "code": "llm_error",
+            "message": "The LLM operation failed.",
+        },
+    )
