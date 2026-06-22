@@ -41,10 +41,17 @@ def init_db() -> None:
                 token_usage TEXT,
                 evaluation_scores TEXT,
                 advisor_preferences TEXT,
+                provider_request_id TEXT,
+                client_request_id TEXT,
                 timestamp TEXT NOT NULL
             )
             """
         )
+        # Lightweight, idempotent migration for repositories that already have
+        # an optimizer.sqlite3 created by the pre-refactor schema.
+        _ensure_column(conn, "agent_runs", "provider_request_id", "TEXT")
+        _ensure_column(conn, "agent_runs", "client_request_id", "TEXT")
+
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS prompt_versions (
@@ -80,4 +87,19 @@ def init_db() -> None:
                 created_at TEXT NOT NULL
             )
             """
+        )
+
+
+def _ensure_column(
+    conn: sqlite3.Connection,
+    table_name: str,
+    column_name: str,
+    column_definition: str,
+) -> None:
+    existing_columns = {
+        row["name"] for row in conn.execute(f"PRAGMA table_info({table_name})")
+    }
+    if column_name not in existing_columns:
+        conn.execute(
+            f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_definition}"
         )
