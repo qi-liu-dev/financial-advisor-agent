@@ -1,10 +1,15 @@
 # Advisor Agent Lab
 
-An Azure-deployed AI agent evaluation and prompt-optimisation platform for **synthetic investment-management workflows**.
+An Azure-deployed AI agent evaluation and prompt-optimisation platform for **synthetic investment-management workflows**. 
 
 The project demonstrates how specialised LLM agents can be run, evaluated, compared, monitored, and promoted safely instead of being exposed as an ungoverned chat interface.
 
-> **Synthetic data only.** This project does not provide investment advice and is not designed for real client data without additional security, compliance, persistence, and operational controls.
+## Live demo
+
+[Open the deployed dashboard](https://fa-agent-web-qi.greenhill-782021b3.swedencentral.azurecontainerapps.io)
+
+The demo uses synthetic data only. Protected API functions require a temporary application access key.
+
 
 ## 1. Project overview
 
