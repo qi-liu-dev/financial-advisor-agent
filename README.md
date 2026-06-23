@@ -1,112 +1,220 @@
-# Financial Advisor Agent Optimizer
+# Advisor Agent Lab
 
-A FastAPI prototype for building, evaluating, and improving structured LLM agents in synthetic investment-management workflows. The project supports public OpenAI and Azure OpenAI, typed API contracts, repeatable quality evaluation, controlled prompt promotion, traceability, and an Azure-ready deployment path.
+An Azure-deployed AI agent evaluation and prompt-optimisation platform for **synthetic investment-management workflows**.
 
-> The bundled client, portfolio, meeting, and proposal records are synthetic. The prototype is not investment advice and is not a production system for real client data without the additional controls described below.
+The project demonstrates how specialised LLM agents can be run, evaluated, compared, monitored, and promoted safely instead of being exposed as an ungoverned chat interface.
 
-## What the project demonstrates
+> **Synthetic data only.** This project does not provide investment advice and is not designed for real client data without additional security, compliance, persistence, and operational controls.
 
-- Three specialised agents: client summary, meeting notes, and investment proposal review.
-- Provider-neutral LLM access through one gateway supporting OpenAI, Azure OpenAI API keys, and Azure Managed Identity.
-- Pydantic validation for inputs, structured model outputs, API responses, benchmark data, job records, and stored evaluation results.
-- Rule-based, benchmark-expectation, and LLM-as-judge evaluation with provenance.
-- Multilingual safety checks and concept-aware benchmark matching rather than English-only substring checks.
-- GEPA-inspired prompt reflection and mutation with repeated benchmark runs, mean/standard-deviation metrics, policy tolerances, and Pareto selection.
-- Explicit prompt lifecycle: `baseline`, `candidate`, `selected`, and `rejected`; only a baseline or selected prompt can be activated.
-- Persistent asynchronous optimisation jobs with queue/running/completed/failed status and progress polling.
-- Versioned database migrations, indexed queries, pagination, owner isolation, retention/delete operations, audit events, and optional field-level encryption.
-- Versioned `/api/v1` API, Angular-compatible CORS, API-key or Azure Easy Auth identity, request IDs, safe error responses, and a demo rate limiter.
-- Docker support, 43 backend tests, and 8 frontend tests.
+## 1. Project overview
 
-## Architecture
+Advisor Agent Lab contains three structured financial-advisory agents:
 
-```text
-Angular / API consumer
-        |
-        |  typed JSON over /api/v1
-        v
-FastAPI routes + auth + owner isolation + rate limiting
-        |
-        +--> agent service -----------> unified LLM gateway
-        |                                  |-- OpenAI API key
-        |                                  |-- Azure OpenAI API key
-        |                                  `-- Azure Managed Identity
-        |
-        +--> central evaluation service
-        |      |-- multilingual deterministic rules
-        |      |-- benchmark expectation checks
-        |      `-- optional LLM judge + provenance
-        |
-        +--> prompt optimiser
-        |      |-- persistent async job
-        |      |-- repeated benchmark runs
-        |      |-- mean/stddev metrics
-        |      `-- tolerance + Pareto selection
-        |
-        `--> SQLite repositories
-               |-- versioned migrations and indexes
-               |-- ownership and pagination
-               |-- audit and retention
-               `-- optional Fernet encryption
-```
+- **Client Summary** — prepares a concise client and portfolio overview for an advisor.
+- **Meeting Notes** — converts a synthetic transcript into decisions, risks, follow-ups, and next actions.
+- **Investment Review** — reviews a synthetic investment proposal for suitability context, risks, missing information, and compliance concerns.
 
-For a production Azure deployment, the process-local optimiser worker should be replaced with a durable queue and worker/Container Apps Job, and SQLite should be replaced with a managed database or constrained to a single-replica demo deployment.
+Each agent returns a schema-validated Pydantic response rather than unrestricted text.
 
-## Project structure
+| Layer | Technology |
+|---|---|
+| Frontend | Angular 21, TypeScript, SCSS, Nginx |
+| Backend | Python 3.11, FastAPI, Pydantic |
+| LLM access | OpenAI or Azure OpenAI through one provider-neutral client |
+| Evaluation | Deterministic rules, benchmark checks, optional LLM judge |
+| Storage | SQLite with migrations, indexes, optional Fernet encryption |
+| Cloud | Azure Container Apps and Azure Container Registry |
+
+The optimiser is **GEPA-inspired**: it reflects on weak benchmark cases, generates prompt variants, evaluates them repeatedly, and compares quality, safety, latency, and estimated cost. It does not claim to be a complete implementation of GEPA.
+
+## 2. Live architecture
+
+The current Azure deployment uses two container applications in the same Azure Container Apps environment:
 
 ```text
-backend/
-  agents/             Financial-advisory agent definitions
-  api/                Versioned routers, dependencies, converters, error mapping
-  data/               Synthetic benchmark and mock datasets
-  evaluation/         Rules, benchmark checks, judge, metrics, shared service
-  llm/                Provider-neutral OpenAI/Azure gateway
-  memory/             Advisor-preference repository
-  models/             Pydantic API/domain schemas and database record types
-  optimisation/       Prompt lifecycle, selection policy, loop, async jobs
-  security/           Authentication, authorization, encryption, middleware
-  traces/             Run persistence, pagination, deletion, retention
-  audit.py            Access/change audit repository
-  config.py           Environment-backed settings
-  database.py         SQLite connections and versioned migrations
-  main.py             FastAPI application factory and lifespan
-
-frontend/             Angular 21 operations and evaluation dashboard
-  src/app/core/       Typed HTTP, auth/session, interceptors, shared services
-  src/app/features/   Overview, tasks, playground, runs, optimiser, preferences
-  src/app/shared/     Reusable metrics, scores, JSON, output, chart, and status UI
-  proxy.conf.json     Local same-origin proxy to FastAPI
-  public/             Azure Static Web Apps routing and security headers
-
-tests/                Unit and API/integration tests
+Browser
+   |
+   | HTTPS
+   v
+Angular + Nginx Container App
+fa-agent-web-qi
+   |
+   | /api/v1/* through the environment service name
+   v
+FastAPI Container App
+fa-agent-api-qi
+   |
+   +--> OpenAI API or Azure OpenAI
+   |
+   `--> SQLite demo database
 ```
 
-## Local setup
+Azure Container Registry stores the backend and frontend images.
 
-Use Python 3.11:
+Nginx serves the Angular application, supports client-side routes, and forwards `/api/v1/*` requests to FastAPI. Secrets and runtime settings are configured in Azure Container Apps rather than committed to the repository.
+
+The demo uses:
+
+- one active revision per application;
+- one replica per application;
+- API-key authentication between the browser and FastAPI;
+- field-level encryption when `DATA_ENCRYPTION_KEY` is configured;
+- public OpenAI at present, with Azure OpenAI and Managed Identity supported by the code.
+
+## 3. Main capabilities
+
+### Angular operations dashboard
+
+The frontend contains six complete feature areas:
+
+- **Overview** — runs, quality, safety, latency, estimated cost, active prompts, and system readiness.
+- **Benchmark Tasks** — searchable synthetic tests with expectations and one-click playground handoff.
+- **Agent Playground** — benchmark or custom JSON input, prompt selection, advisor preferences, and typed output rendering.
+- **Run Evaluation** — run history, trace metadata, seven evaluation dimensions, feedback, and provenance.
+- **Prompt Optimizer** — asynchronous jobs, reflection, repeated-run statistics, Pareto view, policy reasons, and prompt review.
+- **Advisor Preferences** — persistent output preferences, development authentication, and synthetic client workspaces.
+
+### Structured and traceable LLM calls
+
+All model requests pass through `backend/llm/client.py`, which centralises:
+
+- OpenAI and Azure OpenAI provider selection;
+- API-key and Azure Managed Identity authentication;
+- timeouts and SDK retry policy;
+- Pydantic structured-output validation;
+- safe metadata-only logging;
+- application and provider request IDs;
+- provider-neutral error handling.
+
+### Evaluation and governance
+
+A shared evaluation service combines:
+
+1. multilingual deterministic safety and format checks;
+2. concept-aware benchmark expectations;
+3. an optional LLM judge with provenance;
+4. latency and estimated-cost metadata.
+
+Prompt versions follow a controlled lifecycle:
+
+```text
+baseline  -> initial active prompt
+candidate -> generated and evaluated, never active automatically
+selected  -> passed policy and Pareto filtering
+rejected  -> evaluated but not accepted
+```
+
+Only a `baseline` or `selected` prompt can be explicitly activated. A newly generated candidate cannot silently replace the active prompt.
+
+### Typed API and data controls
+
+- Versioned API under `/api/v1`.
+- Named Pydantic request and response models for reliable Angular typing.
+- Pagination and owner isolation.
+- API-key or Azure Easy Auth modes.
+- Rate limiting, audit events, retention, and deletion endpoints.
+- Versioned SQLite migrations and optional encrypted JSON fields.
+
+## 4. End-to-end workflow
+
+```text
+Select synthetic task or client workspace
+                |
+                v
+Load advisor preferences and active prompt
+                |
+                v
+Run a specialised agent
+                |
+                v
+Validate and store structured output, token usage,
+latency, prompt version, and request IDs
+                |
+                v
+Evaluate quality, safety, format, and expectations
+                |
+                v
+Start asynchronous prompt optimisation
+                |
+                v
+Reflect on weak cases and generate candidates
+                |
+                v
+Repeat benchmarks and compare mean/stddev metrics
+                |
+                v
+Apply quality, safety, latency, and cost gates
+                |
+                v
+Review selected/rejected candidates
+                |
+                v
+Explicitly activate an approved prompt
+                |
+                v
+Monitor the result on the Overview dashboard
+```
+
+The optimisation endpoint returns `202 Accepted` with a job ID. The Angular client polls the job-status endpoint until the job is completed or failed, so a long-running optimisation does not block one HTTP request.
+
+`No candidate selected` is a valid result: the current active prompt remains unchanged when candidates do not pass the configured policy.
+
+## 5. Local setup
+
+### Prerequisites
+
+- Python 3.11
+- Node.js `>=22.12.0 <23`
+- npm 10.9.x
+- an OpenAI API key, or an Azure OpenAI deployment
+
+### Clone and install the backend
 
 ```bash
+git clone https://github.com/qi-liu-dev/financial-advisor-agent.git
+cd financial-advisor-agent
+
 python3.11 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+./.venv/bin/python -m pip install --upgrade pip
+./.venv/bin/python -m pip install -r requirements.txt
+
 cp .env.example .env
 ```
 
-Run the API:
+For local development with public OpenAI, configure `.env`:
 
-```bash
-python -m uvicorn backend.main:app --reload --env-file .env
+```dotenv
+LLM_PROVIDER=openai
+LLM_AUTH_MODE=api_key
+OPENAI_API_KEY=replace-with-your-key
+OPENAI_MODEL=gpt-4.1-mini
+OPENAI_JUDGE_MODEL=gpt-4.1-mini
+
+AUTH_MODE=disabled
+CORS_ALLOWED_ORIGINS=http://localhost:4200
+RATE_LIMIT_ENABLED=false
+REQUIRE_LLM_FOR_READINESS=false
 ```
 
-Open:
+Never commit `.env` or place an OpenAI key in the Angular application.
+
+Start FastAPI:
+
+```bash
+./.venv/bin/python -m uvicorn backend.main:app --reload --env-file .env
+```
+
+Backend URLs:
 
 ```text
 http://127.0.0.1:8000/docs
 http://127.0.0.1:8000/openapi.json
+http://127.0.0.1:8000/health
 ```
 
-Run the complete Angular dashboard in a second terminal:
+### Install and run Angular
+
+In a second terminal:
 
 ```bash
 cd frontend
@@ -114,45 +222,26 @@ npm ci
 npm start
 ```
 
-Open `http://localhost:4200`. The development proxy forwards `/api/*` to FastAPI, so the browser does not need a separate development CORS workaround.
+Open:
 
-Run backend and frontend checks:
-
-```bash
-python -m pytest -q
-python -m compileall -q backend tests
-
-cd frontend
-npm run build
-npm run test:ci
-
-# Optional after installing Ruff:
-python -m ruff check backend tests
+```text
+http://localhost:4200
 ```
 
-The automated tests mock provider calls and do not require a real OpenAI or Azure credential.
+The development proxy forwards `/api/*` to FastAPI, so browser requests remain same-origin during local development.
 
-## Provider configuration
+## 6. Configuration
+
+Copy `.env.example` and choose one LLM configuration.
 
 ### Public OpenAI
 
 ```dotenv
 LLM_PROVIDER=openai
 LLM_AUTH_MODE=api_key
-OPENAI_API_KEY=replace-me
+OPENAI_API_KEY=replace-with-your-key
 OPENAI_MODEL=gpt-4.1-mini
 OPENAI_JUDGE_MODEL=gpt-4.1-mini
-```
-
-### Azure OpenAI with an API key
-
-```dotenv
-LLM_PROVIDER=azure
-LLM_AUTH_MODE=api_key
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
-AZURE_OPENAI_API_KEY=replace-me
-OPENAI_MODEL=your-agent-deployment-name
-OPENAI_JUDGE_MODEL=your-judge-deployment-name
 ```
 
 ### Azure OpenAI with Managed Identity
@@ -163,300 +252,231 @@ LLM_AUTH_MODE=managed_identity
 AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
 OPENAI_MODEL=your-agent-deployment-name
 OPENAI_JUDGE_MODEL=your-judge-deployment-name
+
 # Set only for a user-assigned identity:
 # AZURE_CLIENT_ID=00000000-0000-0000-0000-000000000000
 ```
 
-All model calls pass through `backend/llm/client.py`, which owns authentication, timeouts, SDK retries, structured-output validation, safe logging, application request IDs, and provider request IDs. See `LLM_CLIENT_REFACTOR.md` for details.
-
-## API authentication and data isolation
-
-### Local development
-
-The default is intentionally convenient for local work:
+### Application authentication
 
 ```dotenv
+# Convenient local development
 AUTH_MODE=disabled
-DEV_PRINCIPAL_ID=demo-advisor
-DEV_PRINCIPAL_ROLES=admin,advisor
-```
 
-### API key mode
-
-```dotenv
+# Shared application key for a demo deployment
 AUTH_MODE=api_key
-API_KEYS_JSON={"replace-with-random-key":{"principal_id":"advisor-001","roles":["advisor"]}}
-```
+API_KEYS_JSON={"replace-with-random-key":{"principal_id":"demo-advisor","roles":["admin","advisor"]}}
 
-Send either:
-
-```http
-X-API-Key: replace-with-random-key
-```
-
-or:
-
-```http
-Authorization: Bearer replace-with-random-key
-```
-
-### Azure authentication mode
-
-```dotenv
+# Azure platform identity headers
 AUTH_MODE=azure_easy_auth
 ```
 
-This mode reads the authenticated principal and roles from headers injected by Azure Container Apps/App Service authentication. Do not enable it on an endpoint that can be reached while bypassing that trusted authentication layer.
-
-Non-admin principals only see their own run, memory, optimisation, and result data. Sensitive run-detail reads and data-changing actions produce audit events.
-
-## Angular dashboard
-
-The checked-in `frontend/` application is a full AI Agent Evaluation and Optimisation Dashboard rather than a chat wrapper. It provides:
-
-- an overview of runs, sampled quality/safety/cost, latency, active prompts, health, and optimisation activity;
-- a searchable benchmark catalogue with task expectations and one-click playground handoff;
-- an agent playground for benchmark tasks, custom JSON, prompt versions, advisor preferences, and synthetic client workspaces;
-- paginated run inspection with typed output, trace metadata, seven evaluation dimensions, provenance, re-evaluation, and deletion;
-- asynchronous prompt optimisation with live polling, reflection, repeated-run statistics, policy reasons, Pareto visualisation, candidate comparison, and explicit activation;
-- advisor-memory management, optional development API-key handling, Azure Easy Auth links, and a client/portfolio/meeting/proposal workspace browser.
-
-All six feature pages are lazy-loaded. The frontend uses relative `/api/v1` URLs, strict TypeScript, standalone Angular components, reactive forms, signals, reusable visual components, and no third-party UI or chart runtime dependency. See `frontend/README.md` for local and Azure Static Web Apps instructions.
-
-## Browser and Angular integration
-
-The API is versioned under `/api/v1`. Local Angular development is allowed by default:
-
-```dotenv
-CORS_ALLOWED_ORIGINS=http://localhost:4200
-```
-
-For multiple origins, use a comma-separated value. Do not use a wildcard origin together with credentialed browser requests.
-
-Every route has a named Pydantic response model, so Angular generation does not collapse business responses to `any`. Export a checked-in snapshot when the API changes:
-
-```bash
-python scripts/export_openapi.py
-```
-
-Then generate an Angular client from the running API or from `docs/openapi.json`. For example:
-
-```bash
-npx @openapitools/openapi-generator-cli generate \
-  -i http://127.0.0.1:8000/openapi.json \
-  -g typescript-angular \
-  -o frontend/src/app/generated-api
-```
-
-A simple Angular development proxy can forward `/api` to FastAPI:
-
-```json
-{
-  "/api": {
-    "target": "http://127.0.0.1:8000",
-    "secure": false,
-    "changeOrigin": true
-  }
-}
-```
-
-## Prompt lifecycle and activation
-
-The active prompt is no longer inferred from the newest database row.
+The application API key is not the OpenAI key:
 
 ```text
-baseline  ── active at first seed
-candidate ── produced by optimisation; never active automatically
-selected  ── passed the acceptance policy and Pareto filter
-rejected  ── evaluated but not selected
+Application API key -> browser calls FastAPI
+OpenAI API key      -> FastAPI calls OpenAI
+Managed Identity    -> Azure-hosted FastAPI calls Azure resources
 ```
 
-Only `baseline` and `selected` versions can be explicitly activated:
-
-```bash
-curl -X POST \
-  http://127.0.0.1:8000/api/v1/prompts/client_summary/VERSION/activate
-```
-
-This fixes the previous failure mode where an unselected candidate could silently become the default prompt for `/run-agent`.
-
-## Evaluation and optimisation policy
-
-One shared `EvaluationService` is used by both `/evaluate-run` and the optimiser. It combines:
-
-1. deterministic multilingual safety and format rules;
-2. concept-aware benchmark expectation checks;
-3. an optional LLM judge;
-4. latency and estimated cost metadata.
-
-Evaluation responses include provenance, model identities, whether the judge is distinct, and a caveat when the same model is judging itself. To reject same-model judging:
+### Optional controls
 
 ```dotenv
-REQUIRE_DISTINCT_JUDGE_MODEL=true
-```
-
-Optimisation repeats each benchmark run and stores mean, standard deviation, and sample count. A candidate first has to satisfy:
-
-```text
-quality >= baseline + minimum_quality_delta
-safety  >= baseline - safety_tolerance
-latency <= baseline * latency_tolerance_ratio
-cost    <= baseline * cost_tolerance_ratio
-```
-
-The default policy is:
-
-```dotenv
-OPTIMISATION_MINIMUM_QUALITY_DELTA=0.05
-OPTIMISATION_SAFETY_TOLERANCE=0.0
-OPTIMISATION_LATENCY_TOLERANCE_RATIO=1.20
-OPTIMISATION_COST_TOLERANCE_RATIO=1.10
-```
-
-Pareto filtering is then applied among policy-qualified candidates. A selected prompt is still not activated automatically; promotion is a separate administrator action.
-
-## Asynchronous optimisation workflow
-
-Create a job:
-
-```bash
-curl -X POST \
-  http://127.0.0.1:8000/api/v1/optimisations/client_summary \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "max_variants": 2,
-    "benchmark_limit": 2,
-    "repetitions": 2
-  }'
-```
-
-The API returns `202 Accepted` with an `OptimisationJobResponse`. Poll:
-
-```bash
-curl http://127.0.0.1:8000/api/v1/optimisations/JOB_ID
-```
-
-When `status` is `completed`, use `result_id`:
-
-```bash
-curl http://127.0.0.1:8000/api/v1/optimisation-results/RESULT_ID
-```
-
-Only one queued/running job is allowed per owner and agent type. Jobs left queued or running after a process restart are marked failed rather than appearing permanently active.
-
-## Storage, privacy, and migrations
-
-SQLite remains appropriate for this local prototype. On startup the application applies idempotent schema migrations recorded in `schema_migrations`. The current migrations add:
-
-- LLM request IDs;
-- prompt lifecycle and one-active-prompt enforcement;
-- owner/advisor fields;
-- optimisation jobs and audit events;
-- query indexes;
-- concurrent-job protection.
-
-Back up the database before applying a new version:
-
-```bash
-cp optimizer.sqlite3 optimizer.sqlite3.backup
-```
-
-### Optional field-level encryption
-
-Generate a Fernet key:
-
-```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-```
-
-Then configure:
-
-```dotenv
-DATA_ENCRYPTION_KEY=replace-with-generated-key
-```
-
-New JSON fields containing inputs, outputs, preferences, evaluations, job requests, and audit metadata are encrypted at rest. Existing plaintext rows remain readable to support gradual migration. Store the encryption key in Azure Key Vault or another secret manager; losing it makes encrypted rows unreadable.
-
-### Retention and deletion
-
-```dotenv
+DATA_ENCRYPTION_KEY=replace-with-a-Fernet-key
 DATA_RETENTION_DAYS=90
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_REQUESTS=600
+RATE_LIMIT_WINDOW_SECONDS=60
+REQUIRE_DISTINCT_JUDGE_MODEL=false
 ```
 
-Expired runs are purged at application startup. Owners can also delete individual runs or purge their own old runs through the API. Administrators can request an all-owner purge.
-
-## Main endpoints
-
-All business routes are prefixed by `/api/v1`.
-
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/health` | Root platform health probe |
-| GET | `/api/v1/health` | Typed database/LLM readiness details |
-| GET | `/api/v1/tasks` | Validated synthetic benchmark tasks |
-| GET | `/api/v1/mock-data/{dataset}` | Synthetic clients, portfolios, meetings, or proposals |
-| GET | `/api/v1/mock-data/workspaces/{client_id}` | Aggregated synthetic client workspace |
-| POST | `/api/v1/run-agent` | Run an agent using an active or explicit prompt |
-| POST | `/api/v1/evaluate-run/{run_id}` | Evaluate a stored run through the shared service |
-| GET | `/api/v1/runs` | Paginated, owner-filtered run summaries |
-| GET | `/api/v1/runs/{run_id}` | Authorized full run detail |
-| DELETE | `/api/v1/runs/{run_id}` | Delete one authorized run |
-| DELETE | `/api/v1/runs` | Retention purge |
-| GET/POST/DELETE | `/api/v1/memory/{advisor_id}` | Read, update, or delete advisor preferences |
-| GET | `/api/v1/prompt-versions/{agent_type}` | Paginated prompt history |
-| GET | `/api/v1/prompts/{agent_type}/active` | Current active prompt |
-| POST | `/api/v1/prompts/{agent_type}/{version}/activate` | Admin-only explicit promotion |
-| POST | `/api/v1/optimisations/{agent_type}` | Queue asynchronous optimisation |
-| GET | `/api/v1/optimisations` | Paginated job history |
-| GET | `/api/v1/optimisations/{job_id}` | Job status and progress |
-| GET | `/api/v1/optimisation-results` | Paginated result history |
-| GET | `/api/v1/optimisation-results/{id}` | Typed optimisation result |
-| GET | `/api/v1/audit-events` | Admin-only audit history |
-
-## Example agent request
+Generate a Fernet key with:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/api/v1/run-agent \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "agent_type": "client_summary",
-    "task_id": "client-summary-001"
-  }'
+./.venv/bin/python -c \
+  'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'
 ```
 
-The response contains a schema-validated agent output plus `client_request_id` and `provider_request_id` for trace correlation.
+## 7. Tests
 
-## Docker
+Backend tests use mocked provider calls and do not require a real model credential:
 
 ```bash
-docker compose up --build
+./.venv/bin/python -m pytest -q
+./.venv/bin/python -m compileall -q backend tests scripts
 ```
 
-The compose file mounts `/data` for SQLite persistence. This is a single-process demo design. Do not scale multiple replicas against the same SQLite file.
-
-## Test coverage
-
-The suite includes:
-
-- Pydantic schemas and OpenAPI response names;
-- OpenAI/Azure client configuration, Managed Identity, retry, and request IDs;
-- benchmark and multilingual safety evaluation;
-- policy tolerance and Pareto selection;
-- prompt activation safety;
-- database migrations, indexes, encryption, isolation, retention, and audit behavior;
-- CORS, API-key auth, Azure principal headers, rate limiting, run/evaluation APIs;
-- persistent async optimisation jobs and concurrency protection;
-- GEPA-inspired loop behavior with mocked providers.
+Expected backend result:
 
 ```text
-Backend: 43 passed
-Frontend: 8 passed
+43 passed
 ```
 
-## Remaining production work
+Frontend verification runs unit tests, a production build, and Prettier:
 
-- Replace the local `ThreadPoolExecutor` with a durable Azure queue and worker/Container Apps Job.
-- Replace SQLite with PostgreSQL or Azure SQL for multi-replica operation.
-- Put authentication enforcement, rate limiting, and network restrictions at the Azure ingress/API-management layer as well as in the app.
-- Store keys and encryption material in Key Vault and use Managed Identity.
-- Add OpenTelemetry/Application Insights, alerting, data-classification policy, and compliance review before using real client data.
+```bash
+cd frontend
+npm run verify
+```
+
+Expected frontend result:
+
+```text
+5 test files passed
+8 tests passed
+production build passed
+format check passed
+```
+
+On systems with multiple Python installations, prefer `./.venv/bin/python -m pytest` over a bare `pytest` command.
+
+## 8. Azure deployment
+
+### Current deployment model
+
+```text
+Azure Container Registry
+   |-- financial-advisor-agent-api:<git-sha>
+   `-- financial-advisor-agent-web:<git-sha>
+
+Azure Container Apps Environment
+   |-- FastAPI Container App
+   `-- Angular + Nginx Container App
+```
+
+Images are built locally with Docker Buildx and pushed to Azure Container Registry. This also works for subscriptions where ACR Tasks are unavailable.
+
+Set deployment variables:
+
+```bash
+export RG="rg-fa-agent-demo"
+export LOCATION="swedencentral"
+export ACA_ENV="fa-agent-env"
+export API_APP="fa-agent-api-qi"
+export WEB_APP="fa-agent-web-qi"
+export ACR_NAME="your-registry-name"
+
+export ACR_SERVER="$(az acr show --name "$ACR_NAME" --query loginServer -o tsv)"
+export TAG="$(git rev-parse --short HEAD)"
+```
+
+Log in to the registry:
+
+```bash
+az acr login --name "$ACR_NAME"
+```
+
+### Build and push the backend
+
+```bash
+export API_IMAGE="$ACR_SERVER/financial-advisor-agent-api:$TAG"
+
+docker buildx build \
+  --platform linux/amd64 \
+  --tag "$API_IMAGE" \
+  --push \
+  .
+```
+
+Update the backend Container App:
+
+```bash
+az containerapp update \
+  --name "$API_APP" \
+  --resource-group "$RG" \
+  --image "$API_IMAGE"
+```
+
+### Build and push the frontend
+
+```bash
+export WEB_IMAGE="$ACR_SERVER/financial-advisor-agent-web:$TAG"
+
+docker buildx build \
+  --platform linux/amd64 \
+  --file frontend/Dockerfile \
+  --tag "$WEB_IMAGE" \
+  --push \
+  frontend
+```
+
+Update the web Container App:
+
+```bash
+az containerapp update \
+  --name "$WEB_APP" \
+  --resource-group "$RG" \
+  --image "$WEB_IMAGE"
+```
+
+The web application must receive the internal API service name:
+
+```text
+API_UPSTREAM=http://fa-agent-api-qi
+```
+
+### Runtime settings
+
+Configure sensitive values as Container Apps secrets and reference them from environment variables. The deployed backend uses settings such as:
+
+```text
+LLM_PROVIDER=openai
+LLM_AUTH_MODE=api_key
+OPENAI_API_KEY=secretref:openai-api-key
+AUTH_MODE=api_key
+API_KEYS_JSON=secretref:app-api-keys
+DATA_ENCRYPTION_KEY=secretref:data-encryption-key
+SQLITE_DB_PATH=/data/optimizer.sqlite3
+OPTIMISATION_WORKER_COUNT=1
+```
+
+Keep both applications in single-revision, single-replica mode for the current architecture:
+
+```bash
+for APP in "$API_APP" "$WEB_APP"; do
+  az containerapp revision set-mode \
+    --name "$APP" \
+    --resource-group "$RG" \
+    --mode single
+
+  az containerapp update \
+    --name "$APP" \
+    --resource-group "$RG" \
+    --min-replicas 1 \
+    --max-replicas 1
+done
+```
+
+After validating the Nginx proxy, the FastAPI ingress can be restricted to internal access within the Container Apps environment.
+
+The deployed Dashboard uses the **application API key** in:
+
+```text
+Advisor Preferences
+-> Connection and identity
+-> Development API key
+```
+
+Do not enter the OpenAI API key in the browser.
+
+## 9. Current limitations
+
+- **Synthetic data only.** The application is not approved for real client or investment data.
+- **Ephemeral SQLite storage.** Data can be lost when the backend replica or revision is replaced. A production version should use Azure PostgreSQL or Azure SQL.
+- **Process-local optimisation worker.** A running job can fail if the backend process restarts. A production version should use Service Bus or Storage Queue with a dedicated worker or Container Apps Job.
+- **Single-replica architecture.** SQLite, the in-process worker, and the local rate limiter are not designed for horizontal scaling.
+- **Demo authentication.** API-key mode is suitable for a controlled demo; Microsoft Entra ID and role assignment should be completed for multi-user deployment.
+- **Possible same-model judge bias.** Using the same model as agent and judge can inflate or correlate scores; a distinct judge model and human review are preferable.
+- **Benchmark ceiling effect.** On the current small synthetic benchmark set, the baseline prompt frequently scores `5.00 / 5.00`. The default policy requires a candidate to improve quality by `+0.05`, which is impossible when the score is already at the maximum. GEPA-inspired candidates may therefore be rejected even when they preserve quality or improve one operational metric. This is a benchmark and selection-policy limitation, not evidence that GEPA-style optimisation is inherently worse.
+- **Planned evaluation improvements.** Add harder and adversarial benchmark cases, ceiling-aware selection, early stopping when no weak cases exist, efficiency-focused mutations, and larger repeated samples.
+- **Not a full GEPA implementation.** The project borrows reflection, mutation, repeated evaluation, and Pareto comparison ideas for a focused prototype.
+
+---
+
+The central design principle is simple:
+
+```text
+Run -> Evaluate -> Optimise -> Review -> Explicitly promote -> Monitor
+```
+
+A candidate is never deployed merely because it is newer.
