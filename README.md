@@ -25,7 +25,7 @@ Each agent returns a schema-validated Pydantic response rather than unrestricted
 | Storage | SQLite with migrations, indexes, optional Fernet encryption |
 | Cloud | Azure Container Apps and Azure Container Registry |
 
-The optimiser is **GEPA-inspired**: it reflects on weak benchmark cases, generates prompt variants, evaluates them repeatedly, and compares quality, safety, latency, and estimated cost. It does not claim to be a complete implementation of GEPA.
+
 
 ## 2. Live architecture
 
@@ -467,9 +467,9 @@ Do not enter the OpenAI API key in the browser.
 - **Single-replica architecture.** SQLite, the in-process worker, and the local rate limiter are not designed for horizontal scaling.
 - **Demo authentication.** API-key mode is suitable for a controlled demo; Microsoft Entra ID and role assignment should be completed for multi-user deployment.
 - **Possible same-model judge bias.** Using the same model as agent and judge can inflate or correlate scores; a distinct judge model and human review are preferable.
-- **Benchmark ceiling effect.** On the current small synthetic benchmark set, the baseline prompt frequently scores `5.00 / 5.00`. The default policy requires a candidate to improve quality by `+0.05`, which is impossible when the score is already at the maximum. GEPA-inspired candidates may therefore be rejected even when they preserve quality or improve one operational metric. This is a benchmark and selection-policy limitation, not evidence that GEPA-style optimisation is inherently worse.
+- **Benchmark ceiling effect.** On the current small synthetic benchmark set, the baseline prompt frequently reaches the maximum score of 5.00 / 5.00. Because the default acceptance policy requires candidates to improve quality by at least +0.05, no candidate can pass this threshold once the baseline is already at the scoring ceiling. Revised prompts may therefore be rejected even when they preserve quality or improve latency or cost. This reflects a limitation of the current benchmark set and selection policy, rather than a general failure of prompt optimisation.
 - **Planned evaluation improvements.** Add harder and adversarial benchmark cases, ceiling-aware selection, early stopping when no weak cases exist, efficiency-focused mutations, and larger repeated samples.
-- **Not a full GEPA implementation.** The project borrows reflection, mutation, repeated evaluation, and Pareto comparison ideas for a focused prototype.
+
 
 ---
 
