@@ -60,6 +60,18 @@ const tasks: BenchmarkTaskResponse[] = [
   },
 ];
 
+const memory = {
+  advisor_id: 'demo-advisor',
+  preferences: {
+    summary_style: 'brief' as const,
+    detail_level: 'high' as const,
+    risk_focus: 'high' as const,
+    preferred_language: 'en',
+  },
+  created_at: '2026-06-22T12:00:00Z',
+  updated_at: '2026-06-23T12:00:00Z',
+};
+
 describe('AgentRunnerPage', () => {
   let http: HttpTestingController;
 
@@ -86,9 +98,14 @@ describe('AgentRunnerPage', () => {
           request.params.get('page_size') === '200',
       )
       .flush(page('client_summary'));
+    http.expectOne('/api/v1/memory/demo-advisor').flush(memory);
     http.expectOne('/api/v1/tasks').flush(tasks);
     fixture.detectChanges();
 
+    expect(component.form.controls.summaryStyle.value).toBe('brief');
+    expect(component.form.controls.detailLevel.value).toBe('high');
+    expect(component.form.controls.riskFocus.value).toBe('high');
+    expect(component.form.controls.preferredLanguage.value).toBe('en');
     expect(component.matchingTasks().map((task) => task.task_id)).toEqual(['summary-1']);
     expect(component.selectedTask()?.task_id).toBe('summary-1');
     expect(component.selectedPrompt()).toBeNull();

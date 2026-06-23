@@ -50,8 +50,18 @@
             </select>
           </div>
           <div class="field">
-            <label for="advisor-id">Advisor ID</label
-            ><input id="advisor-id" class="input" formControlName="advisorId" autocomplete="off" />
+            <div class="field-heading">
+              <label for="advisor-id">Advisor ID</label
+              ><button
+                type="button"
+                class="text-button"
+                [disabled]="loadingPreferences()"
+                (click)="loadAdvisorMemory()"
+              >
+                {{ loadingPreferences() ? 'Loading…' : 'Load saved preferences' }}
+              </button>
+            </div>
+            <input id="advisor-id" class="input" formControlName="advisorId" autocomplete="off" />
             @if (form.controls.advisorId.touched && form.controls.advisorId.invalid) {
               <small class="text-danger">Advisor ID is required.</small>
             }
