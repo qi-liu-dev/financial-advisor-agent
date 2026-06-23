@@ -60,6 +60,7 @@ export class AgentRunnerPage {
   readonly result = signal<RunAgentResponse | null>(null);
   readonly importedWorkspace = signal<ClientWorkspaceResponse | null>(null);
   readonly payloadError = signal('');
+  readonly loadingPreferences = signal(false);
   private pendingTaskId = '';
   private pendingClientId = '';
 
@@ -105,6 +106,8 @@ export class AgentRunnerPage {
       this.applyPendingTask();
     });
 
+    this.loadAdvisorMemory(false);
+
     this.form.controls.agentType.valueChanges
       .pipe(
         startWith(this.form.controls.agentType.value),
@@ -133,6 +136,42 @@ export class AgentRunnerPage {
         this.tasks.set(tasks);
         this.applyPendingTask();
         this.ensureMatchingTask(this.form.controls.agentType.value);
+      });
+  }
+
+  loadAdvisorMemory(showToast = true): void {
+    const advisorId = this.form.controls.advisorId.value.trim();
+    if (!advisorId) {
+      this.form.controls.advisorId.markAsTouched();
+      return;
+    }
+
+    this.loadingPreferences.set(true);
+    this.api
+      .getMemory(advisorId)
+      .pipe(
+        finalize(() => this.loadingPreferences.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((memory) => {
+        this.session.setAdvisorId(memory.advisor_id);
+        this.form.patchValue(
+          {
+            advisorId: memory.advisor_id,
+            summaryStyle: memory.preferences.summary_style,
+            detailLevel: memory.preferences.detail_level,
+            riskFocus: memory.preferences.risk_focus,
+            preferredLanguage: memory.preferences.preferred_language,
+          },
+          { emitEvent: false },
+        );
+
+        if (showToast) {
+          this.toasts.success(
+            'Saved advisor preferences loaded',
+            `Using the stored defaults for ${memory.advisor_id}.`,
+          );
+        }
       });
   }
 
